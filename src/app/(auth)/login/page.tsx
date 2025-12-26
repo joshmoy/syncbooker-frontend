@@ -2,29 +2,25 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "lucide-react";
-import { toast } from "sonner";
+import { useLogin } from "@/hooks/use-auth";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const loginMutation = useLogin();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      toast.success("Login successful!");
-      router.push("/dashboard");
-      setIsLoading(false);
-    }, 1000);
+    // Call the login mutation
+    loginMutation.mutate({
+      email,
+      password,
+    });
   };
 
   return (
@@ -75,8 +71,12 @@ export default function LoginPage() {
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Logging in..." : "Log in"}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loginMutation.isPending}
+            >
+              {loginMutation.isPending ? "Logging in..." : "Log in"}
             </Button>
           </form>
 

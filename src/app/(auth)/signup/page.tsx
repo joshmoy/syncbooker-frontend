@@ -2,30 +2,32 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "lucide-react";
-import { toast } from "sonner";
+import { useRegister } from "@/hooks/use-auth";
 
 export default function SignupPage() {
-  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const registerMutation = useRegister();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      toast.success("Account created successfully!");
-      router.push("/dashboard");
-      setIsLoading(false);
-    }, 1000);
+    // Validate password length
+    if (password.length < 8) {
+      return;
+    }
+
+    // Call the register mutation
+    registerMutation.mutate({
+      name,
+      email,
+      password,
+    });
   };
 
   return (
@@ -83,8 +85,14 @@ export default function SignupPage() {
               </p>
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Creating account..." : "Create account"}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={registerMutation.isPending}
+            >
+              {registerMutation.isPending
+                ? "Creating account..."
+                : "Create account"}
             </Button>
           </form>
 

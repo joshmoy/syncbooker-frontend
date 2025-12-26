@@ -21,6 +21,9 @@ import {
   Link as LinkIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/store/auth";
+import { useLogout } from "@/hooks/use-auth";
+import { useEffect } from "react";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -32,6 +35,12 @@ const navigation = [
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { user, initialize } = useAuthStore();
+  const handleLogout = useLogout();
+
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
 
   return (
     <div className="flex min-h-screen">
@@ -77,9 +86,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                     <AvatarFallback>JD</AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col items-start text-left">
-                    <span className="label-md">John Doe</span>
+                    <span className="label-md">{user?.name || "User"}</span>
                     <span className="body-sm text-muted-foreground">
-                      john@example.com
+                      {user?.email || "user@example.com"}
                     </span>
                   </div>
                 </Button>
@@ -92,7 +101,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                   Settings
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
                   Log out
                 </DropdownMenuItem>

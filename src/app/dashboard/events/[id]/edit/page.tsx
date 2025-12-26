@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, use } from "react";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,9 +14,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useCreateEventType } from "@/hooks/use-event-types";
+import { useEventType, useUpdateEventType } from "@/hooks/use-event-types";
+import { useRouter } from "next/navigation";
 
 const durations = [15, 30, 45, 60, 90, 120];
 
@@ -30,23 +31,60 @@ const colorOptions = [
   { value: "#6B7280", label: "Gray" },
 ];
 
-export default function NewEventPage() {
+export default function EditEventPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const router = useRouter();
+  const { id } = use(params);
+  const { data: eventType, isLoading } = useEventType(id);
+  const updateEventType = useUpdateEventType(id);
+
   const [title, setTitle] = useState("");
   const [duration, setDuration] = useState("30");
   const [description, setDescription] = useState("");
   const [color, setColor] = useState("#3B82F6");
-  const createEventType = useCreateEventType();
+
+  useEffect(() => {
+    if (eventType) {
+      setTitle(eventType.title);
+      setDuration(eventType.durationMinutes.toString());
+      setDescription(eventType.description || "");
+      setColor(eventType.color || "#3B82F6");
+    }
+  }, [eventType]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    createEventType.mutate({
-      title,
-      durationMinutes: parseInt(duration),
-      description: description || undefined,
-      color: color || undefined,
-    });
+    updateEventType.mutate(
+      {
+        title,
+        durationMinutes: parseInt(duration),
+        description: description || undefined,
+        color: color || undefined,
+      },
+      {
+        onSuccess: () => {
+          router.push("/dashboard/events");
+        },
+      }
+    );
   };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex min-h-[400px] items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="body-sm text-muted-foreground">Loading event type...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -59,9 +97,9 @@ export default function NewEventPage() {
             </Button>
           </Link>
           <div>
-            <h1 className="heading-lg">Create Event Type</h1>
+            <h1 className="heading-lg">Edit Event Type</h1>
             <p className="body-md mt-2 text-muted-foreground">
-              Set up a new event type for bookings
+              Update your event type details
             </p>
           </div>
         </div>
@@ -140,11 +178,9 @@ export default function NewEventPage() {
                   <div className="flex gap-4">
                     <Button
                       type="submit"
-                      disabled={createEventType.isPending}
+                      disabled={updateEventType.isPending}
                     >
-                      {createEventType.isPending
-                        ? "Creating..."
-                        : "Create Event Type"}
+                      {updateEventType.isPending ? "Saving..." : "Save Changes"}
                     </Button>
                     <Link href="/dashboard/events">
                       <Button type="button" variant="outline">
