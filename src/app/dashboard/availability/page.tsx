@@ -13,7 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import {
   useAvailabilities,
   useDeleteAvailability,
@@ -44,6 +45,59 @@ const formatTimeForUI = (time: string): string => {
 // Helper to convert HH:mm to HH:mm:ss
 const formatTimeForAPI = (time: string): string => {
   return `${time}:00`;
+};
+
+// Helper to convert time string to minutes for comparison
+const timeToMinutes = (time: string): number => {
+  const [hours, minutes] = time.split(":").map(Number);
+  return hours * 60 + minutes;
+};
+
+// Validate that start time is before end time
+const validateTimeSlot = (start: string, end: string): boolean => {
+  return timeToMinutes(start) < timeToMinutes(end);
+};
+
+// Check if two time slots overlap
+const doSlotsOverlap = (
+  slot1: { start: string; end: string },
+  slot2: { start: string; end: string }
+): boolean => {
+  const start1 = timeToMinutes(slot1.start);
+  const end1 = timeToMinutes(slot1.end);
+  const start2 = timeToMinutes(slot2.start);
+  const end2 = timeToMinutes(slot2.end);
+
+  return start1 < end2 && start2 < end1;
+};
+
+// Validate all slots for a day (no overlaps, valid times)
+const validateDaySlots = (
+  slots: Array<{ start: string; end: string }>
+): { valid: boolean; error?: string } => {
+  // Check each slot is valid
+  for (const slot of slots) {
+    if (!validateTimeSlot(slot.start, slot.end)) {
+      return {
+        valid: false,
+        error: `Invalid time slot: ${slot.start} must be before ${slot.end}`,
+      };
+    }
+  }
+
+  // Check for overlaps
+  for (let i = 0; i < slots.length; i++) {
+    for (let j = i + 1; j < slots.length; j++) {
+      if (doSlotsOverlap(slots[i], slots[j])) {
+        return {
+          valid: false,
+          error: `Time slots overlap: ${slots[i].start}-${slots[i].end} and ${slots[j].start}-${slots[j].end}`,
+        };
+      }
+    }
+  }
+
+  return { valid: true };
 };
 
 export default function AvailabilityPage() {
@@ -105,12 +159,15 @@ export default function AvailabilityPage() {
   const handleToggle = (index: number) => {
     const newAvailability = [...availability];
     newAvailability[index].enabled = !newAvailability[index].enabled;
-    
+
     // If enabling and no slots, add default
-    if (newAvailability[index].enabled && newAvailability[index].slots.length === 0) {
+    if (
+      newAvailability[index].enabled &&
+      newAvailability[index].slots.length === 0
+    ) {
       newAvailability[index].slots = [{ start: "09:00", end: "17:00" }];
     }
-    
+
     setAvailability(newAvailability);
   };
 
@@ -125,7 +182,63 @@ export default function AvailabilityPage() {
     setAvailability(newAvailability);
   };
 
+  const handleAddSlot = (dayIndex: number) => {
+    const newAvailability = [...availability];
+    const currentSlots = newAvailability[dayIndex].slots;
+
+    // Find a good default time for new slot
+    let newStart = "14:00";
+    let newEnd = "17:00";
+
+    // If there are existing slots, add after the last one
+    if (currentSlots.length > 0) {
+      const lastSlot = currentSlots[currentSlots.length - 1];
+      const lastEndMinutes = timeToMinutes(lastSlot.end);
+
+      // Add 1 hour after last slot ends
+      const newStartMinutes = lastEndMinutes + 60;
+      if (newStartMinutes < 24 * 60) {
+        const hours = Math.floor(newStartMinutes / 60);
+        const minutes = newStartMinutes % 60;
+        newStart = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+
+        const newEndMinutes = newStartMinutes + 180; // 3 hours later
+        if (newEndMinutes < 24 * 60) {
+          const endHours = Math.floor(newEndMinutes / 60);
+          const endMinutes = newEndMinutes % 60;
+          newEnd = `${endHours.toString().padStart(2, "0")}:${endMinutes.toString().padStart(2, "0")}`;
+        }
+      }
+    }
+
+    newAvailability[dayIndex].slots.push({ start: newStart, end: newEnd });
+    setAvailability(newAvailability);
+  };
+
+  const handleRemoveSlot = (dayIndex: number, slotIndex: number) => {
+    const newAvailability = [...availability];
+    newAvailability[dayIndex].slots.splice(slotIndex, 1);
+
+    // If no slots left, disable the day
+    if (newAvailability[dayIndex].slots.length === 0) {
+      newAvailability[dayIndex].enabled = false;
+    }
+
+    setAvailability(newAvailability);
+  };
+
   const handleSave = async () => {
+    // Validate all enabled days
+    for (const day of availability) {
+      if (day.enabled && day.slots.length > 0) {
+        const validation = validateDaySlots(day.slots);
+        if (!validation.valid) {
+          toast.error(`${day.day}: ${validation.error}`);
+          return;
+        }
+      }
+    }
+
     // First, delete all existing availabilities
     if (availabilities) {
       await Promise.all(
@@ -147,6 +260,8 @@ export default function AvailabilityPage() {
 
     if (newSlots.length > 0) {
       batchCreate.mutate(newSlots);
+    } else {
+      toast.success("Availability updated successfully!");
     }
   };
 
@@ -184,27 +299,46 @@ export default function AvailabilityPage() {
               {availability.map((dayData, dayIndex) => (
                 <div
                   key={dayData.day}
-                  className="flex items-center gap-4 rounded-lg border border-border p-4"
+                  className="rounded-lg border border-border p-4"
                 >
-                  <div className="flex items-center gap-3">
-                    <Switch
-                      checked={dayData.enabled}
-                      onCheckedChange={() => handleToggle(dayIndex)}
-                    />
-                    <Label className="w-24 label-md">{dayData.day}</Label>
+                  <div className="flex items-center gap-4 mb-3">
+                    <div className="flex items-center gap-3">
+                      <Switch
+                        checked={dayData.enabled}
+                        onCheckedChange={() => handleToggle(dayIndex)}
+                      />
+                      <Label className="w-24 label-md">{dayData.day}</Label>
+                    </div>
+
+                    {dayData.enabled && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleAddSlot(dayIndex)}
+                        className="ml-auto"
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Time Slot
+                      </Button>
+                    )}
                   </div>
 
                   {dayData.enabled && (
-                    <div className="flex flex-1 flex-col gap-2">
+                    <div className="space-y-2 pl-11">
                       {dayData.slots.map((slot, slotIndex) => (
                         <div
                           key={slotIndex}
-                          className="flex items-center gap-4"
+                          className="flex items-center gap-3"
                         >
                           <Select
                             value={slot.start}
                             onValueChange={(value) =>
-                              handleTimeChange(dayIndex, slotIndex, "start", value)
+                              handleTimeChange(
+                                dayIndex,
+                                slotIndex,
+                                "start",
+                                value
+                              )
                             }
                           >
                             <SelectTrigger className="w-32">
@@ -238,15 +372,42 @@ export default function AvailabilityPage() {
                               ))}
                             </SelectContent>
                           </Select>
+
+                          {dayData.slots.length > 1 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoveSlot(dayIndex, slotIndex)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+
+                          {!validateTimeSlot(slot.start, slot.end) && (
+                            <span className="body-sm text-destructive ml-2">
+                              Invalid time range
+                            </span>
+                          )}
                         </div>
                       ))}
+
+                      {/* Show overlap warning */}
+                      {dayData.slots.length > 1 &&
+                        !validateDaySlots(dayData.slots).valid && (
+                          <div className="text-destructive body-sm mt-2 flex items-center gap-2">
+                            <span>⚠️ {validateDaySlots(dayData.slots).error}</span>
+                          </div>
+                        )}
                     </div>
                   )}
 
                   {!dayData.enabled && (
-                    <span className="body-sm text-muted-foreground">
-                      Unavailable
-                    </span>
+                    <div className="pl-11">
+                      <span className="body-sm text-muted-foreground">
+                        Unavailable
+                      </span>
+                    </div>
                   )}
                 </div>
               ))}
