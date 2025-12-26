@@ -14,10 +14,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Copy, Link as LinkIcon } from "lucide-react";
 import Link from "next/link";
 import { useEventType, useUpdateEventType } from "@/hooks/use-event-types";
+import { useAuthStore } from "@/store/auth";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 const durations = [15, 30, 45, 60, 90, 120];
 
@@ -38,6 +40,7 @@ export default function EditEventPage({
 }) {
   const router = useRouter();
   const { id } = use(params);
+  const { user } = useAuthStore();
   const { data: eventType, isLoading } = useEventType(id);
   const updateEventType = useUpdateEventType(id);
 
@@ -45,6 +48,16 @@ export default function EditEventPage({
   const [duration, setDuration] = useState("30");
   const [description, setDescription] = useState("");
   const [color, setColor] = useState("#3B82F6");
+
+  const getBookingLink = () => {
+    const username = user?.username || user?.email?.split('@')[0] || eventType?.userId;
+    return `${window.location.origin}/${username}/${id}`;
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(getBookingLink());
+    toast.success("Booking link copied to clipboard!");
+  };
 
   useEffect(() => {
     if (eventType) {
@@ -193,7 +206,7 @@ export default function EditEventPage({
             </Card>
           </div>
 
-          <div>
+          <div className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="heading-sm">Preview</CardTitle>
@@ -219,6 +232,37 @@ export default function EditEventPage({
                 <p className="body-sm text-muted-foreground">
                   This is how your event will appear to people booking with you
                 </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="heading-sm">
+                  <div className="flex items-center gap-2">
+                    <LinkIcon className="h-5 w-5" />
+                    Booking Link
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="body-sm text-muted-foreground">
+                  Share this link with people who want to book time with you
+                </p>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 rounded-lg border border-border bg-muted/50 p-3">
+                    <code className="body-sm break-all">
+                      {getBookingLink()}
+                    </code>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleCopyLink}
+                    title="Copy link"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>

@@ -23,20 +23,24 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useEventTypes, useDeleteEventType } from "@/hooks/use-event-types";
+import { useAuthStore } from "@/store/auth";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { EventType } from "@/types/event-type";
 
 export default function EventTypesPage() {
   const { data: eventTypes, isLoading, error } = useEventTypes();
+  const { user } = useAuthStore();
   const deleteEventType = useDeleteEventType();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [eventToDelete, setEventToDelete] = useState<string | null>(null);
 
   const handleCopyLink = (eventType: EventType) => {
-    const link = `${window.location.origin}/${eventType.userId}/${eventType.id}`;
+    // Use username if available, fallback to user ID
+    const username = user?.username || user?.email?.split('@')[0] || eventType.userId;
+    const link = `${window.location.origin}/${username}/${eventType.id}`;
     navigator.clipboard.writeText(link);
-    toast.success("Link copied to clipboard!");
+    toast.success("Booking link copied to clipboard!");
   };
 
   const handleDeleteClick = (id: string) => {

@@ -14,12 +14,23 @@ export const availabilityKeys = {
 };
 
 /**
- * Hook to fetch all availability slots
+ * Hook to fetch all availability slots (protected)
  */
 export function useAvailabilities() {
   return useQuery({
     queryKey: availabilityKeys.list(),
     queryFn: () => availabilityService.getAllAvailabilities(),
+  });
+}
+
+/**
+ * Hook to fetch public availability for an event type
+ */
+export function usePublicAvailability(eventTypeId: string) {
+  return useQuery({
+    queryKey: [...availabilityKeys.all, "public", eventTypeId] as const,
+    queryFn: () => availabilityService.getPublicAvailability(eventTypeId),
+    enabled: !!eventTypeId,
   });
 }
 

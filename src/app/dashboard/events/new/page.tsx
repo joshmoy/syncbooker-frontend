@@ -14,9 +14,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Link as LinkIcon } from "lucide-react";
 import Link from "next/link";
 import { useCreateEventType } from "@/hooks/use-event-types";
+import { useAuthStore } from "@/store/auth";
 
 const durations = [15, 30, 45, 60, 90, 120];
 
@@ -31,11 +32,17 @@ const colorOptions = [
 ];
 
 export default function NewEventPage() {
+  const { user } = useAuthStore();
   const [title, setTitle] = useState("");
   const [duration, setDuration] = useState("30");
   const [description, setDescription] = useState("");
   const [color, setColor] = useState("#3B82F6");
   const createEventType = useCreateEventType();
+
+  const getBookingLinkPreview = () => {
+    const username = user?.username || user?.email?.split('@')[0] || 'your-username';
+    return `${typeof window !== 'undefined' ? window.location.origin : ''}/{username}/event-id`;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -157,7 +164,7 @@ export default function NewEventPage() {
             </Card>
           </div>
 
-          <div>
+          <div className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="heading-sm">Preview</CardTitle>
@@ -183,6 +190,23 @@ export default function NewEventPage() {
                 <p className="body-sm text-muted-foreground">
                   This is how your event will appear to people booking with you
                 </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="heading-sm">Booking Link</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="body-sm text-muted-foreground">
+                  After creating this event, you'll get a unique link to share:
+                </p>
+                <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 p-3">
+                  <LinkIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  <code className="body-sm text-muted-foreground break-all">
+                    {getBookingLinkPreview()}
+                  </code>
+                </div>
               </CardContent>
             </Card>
           </div>

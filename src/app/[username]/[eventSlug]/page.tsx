@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, use, useMemo } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,68 +8,110 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Calendar as CalendarIcon, Clock, ArrowLeft } from "lucide-react";
-import { toast } from "sonner";
+import { Calendar as CalendarIcon, Clock, Loader2 } from "lucide-react";
 import Link from "next/link";
-
-const availableSlots = [
-  "09:00 AM",
-  "09:30 AM",
-  "10:00 AM",
-  "10:30 AM",
-  "11:00 AM",
-  "02:00 PM",
-  "02:30 PM",
-  "03:00 PM",
-  "04:00 PM",
-];
+import { usePublicEventType } from "@/hooks/use-event-types";
+import {
+  useAvailableSlots,
+  usePublicBookings,
+  useCreatePublicBooking,
+} from "@/hooks/use-bookings";
+import { format, startOfDay, endOfDay, isSameDay } from "date-fns";
+import { generateSlotsFromBackendResponse } from "@/lib/slot-generator";
 
 export default function BookingPage({
   params,
 }: {
-  params: { username: string; eventSlug: string };
+  params: Promise<{ username: string; eventSlug: string }>;
 }) {
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const { eventSlug } = use(params);
+  const [date, setDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [step, setStep] = useState<"select" | "details" | "confirmed">("select");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [notes, setNotes] = useState("");
 
+  const { data: eventType, isLoading: eventLoading } =
+    usePublicEventType(eventSlug);
+  const createBooking = useCreatePublicBooking();
+
+  // Fetch backend slots (these show one slot per day as samples)
+  const {
+    data: backendSlots,
+    isLoading: slotsLoading,
+    error: slotsError,
+  } = useAvailableSlots(eventSlug);
+
+  // Fetch existing bookings to filter out booked slots
+  const { data: existingBookings } = usePublicBookings(eventSlug);
+
+  // Generate all slots for the selected date based on backend response
+  const slots = useMemo(() => {
+    if (!date || !eventType || !backendSlots) {
+      return [];
+    }
+
+    // Filter bookings for the selected date
+    const dateBookings =
+      existingBookings?.filter((booking) =>
+        isSameDay(new Date(booking.startTime), date)
+      ) || [];
+
+    // Generate all slots from backend's sample slots
+    return generateSlotsFromBackendResponse(
+      backendSlots,
+      date,
+      eventType.durationMinutes,
+      dateBookings
+    );
+  }, [date, eventType, backendSlots, existingBookings]);
+
   const handleConfirm = () => {
-    toast.success("Booking confirmed! Check your email for details.");
-    setStep("confirmed");
+    if (!selectedTime || !eventType) return;
+
+    createBooking.mutate(
+      {
+        eventTypeId: eventType.id,
+        inviteeName: name,
+        inviteeEmail: email,
+        startTime: selectedTime,
+        notes: notes || undefined,
+      },
+      {
+        onSuccess: () => {
+          setStep("confirmed");
+        },
+      }
+    );
   };
 
-  if (step === "confirmed") {
+  // Format slot time for display
+  const formatSlotTime = (isoString: string) => {
+    return format(new Date(isoString), "h:mm a");
+  };
+
+  if (eventLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-muted/30">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="body-sm text-muted-foreground">Loading event details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!eventType) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4">
         <Card className="w-full max-w-md">
           <CardContent className="p-8 text-center">
-            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-foreground text-background">
-              <CalendarIcon className="h-8 w-8" />
-            </div>
-            <h1 className="heading-lg mb-4">Booking Confirmed!</h1>
+            <h1 className="heading-lg mb-4">Event Not Found</h1>
             <p className="body-md text-muted-foreground mb-6">
-              Your meeting has been scheduled. A confirmation email has been sent
-              to {email}.
+              This event type doesn't exist or is no longer available.
             </p>
-            <div className="space-y-2 rounded-lg border border-border bg-muted/50 p-4">
-              <div className="flex items-center justify-center gap-2 body-md">
-                <CalendarIcon className="h-4 w-4" />
-                {date?.toLocaleDateString("en-US", {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </div>
-              <div className="flex items-center justify-center gap-2 body-md">
-                <Clock className="h-4 w-4" />
-                {selectedTime}
-              </div>
-            </div>
-            <Link href="/" className="mt-6 inline-block">
+            <Link href="/">
               <Button variant="outline">Back to Home</Button>
             </Link>
           </CardContent>
@@ -79,42 +121,74 @@ export default function BookingPage({
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <div className="mx-auto max-w-6xl px-4 py-8">
-        <Link href="/">
-          <Button variant="ghost" size="sm" className="mb-6">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
-        </Link>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b border-border bg-card">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between">
+            <Link href="/" className="flex items-center gap-2">
+              <CalendarIcon className="h-6 w-6" />
+              <span className="heading-sm">SyncBooker</span>
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      {step === "confirmed" ? (
+        <div className="flex items-center justify-center px-4 py-16">
+          <Card className="w-full max-w-md">
+            <CardContent className="p-8 text-center">
+              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-foreground text-background">
+                <CalendarIcon className="h-8 w-8" />
+              </div>
+              <h1 className="heading-lg mb-4">Booking Confirmed!</h1>
+              <p className="body-md text-muted-foreground mb-6">
+                Your meeting has been scheduled. A confirmation email has been
+                sent to {email}.
+              </p>
+              <div className="space-y-2 rounded-lg border border-border bg-muted/50 p-4">
+                <div className="flex items-center justify-center gap-2 body-md">
+                  <CalendarIcon className="h-4 w-4" />
+                  {date && format(date, "EEEE, MMMM d, yyyy")}
+                </div>
+                <div className="flex items-center justify-center gap-2 body-md">
+                  <Clock className="h-4 w-4" />
+                  {selectedTime && formatSlotTime(selectedTime)}
+                </div>
+              </div>
+              <Link href="/" className="mt-6 inline-block">
+                <Button variant="outline">Back to Home</Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
+        <div className="mx-auto max-w-6xl px-4 py-8">
 
         <div className="grid gap-8 lg:grid-cols-5">
           {/* Left Column - Event Info */}
           <div className="lg:col-span-2">
             <Card>
               <CardContent className="p-6">
-                <div className="mb-6 flex items-start gap-4">
-                  <Avatar className="h-12 w-12">
-                    <AvatarFallback>JD</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h2 className="heading-sm">John Doe</h2>
-                    <p className="body-sm text-muted-foreground">
-                      @{params.username}
-                    </p>
-                  </div>
-                </div>
-
                 <div className="space-y-4">
-                  <h1 className="heading-lg">30 Min Consultation</h1>
+                  <div className="flex items-center gap-2">
+                    <h1 className="heading-lg">{eventType.title}</h1>
+                    {eventType.color && (
+                      <div
+                        className="h-4 w-4 rounded-full"
+                        style={{ backgroundColor: eventType.color }}
+                      />
+                    )}
+                  </div>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Clock className="h-5 w-5" />
-                    <span className="body-md">30 minutes</span>
+                    <span className="body-md">{eventType.durationMinutes} minutes</span>
                   </div>
-                  <p className="body-md text-muted-foreground">
-                    Quick consultation call to discuss your needs and see how we
-                    can work together.
-                  </p>
+                  {eventType.description && (
+                    <p className="body-md text-muted-foreground">
+                      {eventType.description}
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -131,29 +205,66 @@ export default function BookingPage({
                       <Calendar
                         mode="single"
                         selected={date}
-                        onSelect={setDate}
+                        onSelect={(newDate) => {
+                          setDate(newDate);
+                          setSelectedTime(null); // Reset selected time
+                        }}
                         className="rounded-md border border-border"
-                        disabled={(date) => date < new Date()}
+                        disabled={(date) =>
+                          date < new Date(new Date().setHours(0, 0, 0, 0))
+                        }
                       />
                     </div>
 
                     {date && (
                       <div>
                         <h4 className="label-md mb-3">Available Times</h4>
-                        <div className="grid grid-cols-3 gap-2">
-                          {availableSlots.map((slot) => (
-                            <Button
-                              key={slot}
-                              variant={
-                                selectedTime === slot ? "default" : "outline"
-                              }
-                              onClick={() => setSelectedTime(slot)}
-                              className="w-full"
-                            >
-                              {slot}
-                            </Button>
-                          ))}
-                        </div>
+                        {slotsLoading ? (
+                          <div className="flex justify-center py-8">
+                            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                          </div>
+                        ) : slotsError ? (
+                          <div className="text-center py-8">
+                            <p className="body-md text-muted-foreground mb-2">
+                              Failed to load available times
+                            </p>
+                            <p className="body-sm text-muted-foreground">
+                              Please try again later
+                            </p>
+                          </div>
+                        ) : slots.length > 0 ? (
+                          <div className="space-y-4">
+                            <div className="grid grid-cols-3 gap-2 max-h-[400px] overflow-y-auto pr-2">
+                              {slots.map((slot, index) => (
+                                <Button
+                                  key={`${slot.startTime}-${index}`}
+                                  variant={
+                                    selectedTime === slot.startTime
+                                      ? "default"
+                                      : "outline"
+                                  }
+                                  onClick={() => setSelectedTime(slot.startTime)}
+                                  className="w-full"
+                                >
+                                  {formatSlotTime(slot.startTime)}
+                                </Button>
+                              ))}
+                            </div>
+                            <p className="body-sm text-muted-foreground text-center">
+                              {slots.length} {slots.length === 1 ? "slot" : "slots"}{" "}
+                              available
+                            </p>
+                          </div>
+                        ) : date ? (
+                          <div className="text-center py-8">
+                            <p className="body-md text-muted-foreground mb-2">
+                              No available times for this date
+                            </p>
+                            <p className="body-sm text-muted-foreground">
+                              Please try a different date
+                            </p>
+                          </div>
+                        ) : null}
                       </div>
                     )}
 
@@ -180,16 +291,11 @@ export default function BookingPage({
                     <div className="rounded-lg border border-border bg-muted/50 p-4">
                       <div className="flex items-center gap-2 body-md mb-1">
                         <CalendarIcon className="h-4 w-4" />
-                        {date?.toLocaleDateString("en-US", {
-                          weekday: "long",
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })}
+                        {date && format(date, "EEEE, MMMM d, yyyy")}
                       </div>
                       <div className="flex items-center gap-2 body-md">
                         <Clock className="h-4 w-4" />
-                        {selectedTime}
+                        {selectedTime && formatSlotTime(selectedTime)}
                       </div>
                     </div>
 
@@ -234,15 +340,18 @@ export default function BookingPage({
                         variant="outline"
                         onClick={() => setStep("select")}
                         className="flex-1"
+                        disabled={createBooking.isPending}
                       >
                         Back
                       </Button>
                       <Button
                         onClick={handleConfirm}
                         className="flex-1"
-                        disabled={!name || !email}
+                        disabled={!name || !email || createBooking.isPending}
                       >
-                        Confirm Booking
+                        {createBooking.isPending
+                          ? "Confirming..."
+                          : "Confirm Booking"}
                       </Button>
                     </div>
                   </div>
@@ -251,7 +360,8 @@ export default function BookingPage({
             </Card>
           </div>
         </div>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

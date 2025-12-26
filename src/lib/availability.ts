@@ -1,4 +1,5 @@
 import apiInstance from "./api";
+import axios from "axios";
 import {
   CreateAvailabilityRequest,
   UpdateAvailabilityRequest,
@@ -11,6 +12,32 @@ import {
  * Availability service for managing availability operations
  */
 export const availabilityService = {
+  /**
+   * PUBLIC: Get availability for a specific user (by event type)
+   * Note: This uses the slots endpoint which may return availability data
+   */
+  async getPublicAvailability(eventTypeId: string): Promise<Availability[]> {
+    try {
+      const baseURL =
+        process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+      
+      // Try to get availability data
+      const response = await axios.get<any>(
+        `${baseURL}/public/event-type/${eventTypeId}/slots`
+      );
+      
+      // Check if response has availabilities
+      if (response.data && response.data.availabilities) {
+        return response.data.availabilities;
+      }
+      
+      // If not, return empty array (no availability data from backend)
+      return [];
+    } catch (error) {
+      console.error("Failed to fetch public availability:", error);
+      return []; // Return empty array instead of throwing
+    }
+  },
   /**
    * Create a new availability slot
    */

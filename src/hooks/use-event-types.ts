@@ -27,12 +27,23 @@ export function useEventTypes() {
 }
 
 /**
- * Hook to fetch a single event type
+ * Hook to fetch a single event type (protected)
  */
 export function useEventType(id: string) {
   return useQuery({
     queryKey: eventTypeKeys.detail(id),
     queryFn: () => eventTypesService.getEventTypeById(id),
+    enabled: !!id,
+  });
+}
+
+/**
+ * Hook to fetch a single event type (public - no auth required)
+ */
+export function usePublicEventType(id: string) {
+  return useQuery({
+    queryKey: [...eventTypeKeys.all, "public", id] as const,
+    queryFn: () => eventTypesService.getPublicEventType(id),
     enabled: !!id,
   });
 }

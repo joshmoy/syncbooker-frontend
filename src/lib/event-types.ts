@@ -1,4 +1,5 @@
 import apiInstance from "./api";
+import axios from "axios";
 import {
   CreateEventTypeRequest,
   UpdateEventTypeRequest,
@@ -11,6 +12,16 @@ import {
  * Event Types service for managing event type operations
  */
 export const eventTypesService = {
+  /**
+   * PUBLIC: Get event type by ID (no auth required)
+   */
+  async getPublicEventType(id: string): Promise<EventType> {
+    const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+    const response = await axios.get<EventTypeResponse>(
+      `${baseURL}/public/event-type/${id}`
+    );
+    return response.data.eventType;
+  },
   /**
    * Create a new event type
    */
