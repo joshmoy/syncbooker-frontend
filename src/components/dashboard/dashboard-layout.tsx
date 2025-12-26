@@ -23,7 +23,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth";
 import { useLogout } from "@/hooks/use-auth";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -37,10 +37,22 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, initialize } = useAuthStore();
   const handleLogout = useLogout();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     initialize();
   }, [initialize]);
+
+  // Get initials with fallback
+  const getInitials = () => {
+    if (!mounted || !user?.name) return "U";
+    return user.name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
+  };
 
   return (
     <div className="flex min-h-screen">
@@ -83,12 +95,14 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                   className="w-full justify-start gap-3 px-2"
                 >
                   <Avatar className="h-8 w-8">
-                    <AvatarFallback>JD</AvatarFallback>
+                    <AvatarFallback>{getInitials()}</AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col items-start text-left">
-                    <span className="label-md">{user?.name || "User"}</span>
+                    <span className="label-md">
+                      {mounted && user?.name ? user.name : "User"}
+                    </span>
                     <span className="body-sm text-muted-foreground">
-                      {user?.email || "user@example.com"}
+                      {mounted && user?.email ? user.email : "Loading..."}
                     </span>
                   </div>
                 </Button>

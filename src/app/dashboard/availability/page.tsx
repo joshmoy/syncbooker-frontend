@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,16 +13,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+import {
+  useAvailabilities,
+  useDeleteAvailability,
+  useBatchCreateAvailability,
+} from "@/hooks/use-availability";
+import type { DayAvailability } from "@/types/availability";
 
 const daysOfWeek = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
+  { name: "Sunday", value: 0 },
+  { name: "Monday", value: 1 },
+  { name: "Tuesday", value: 2 },
+  { name: "Wednesday", value: 3 },
+  { name: "Thursday", value: 4 },
+  { name: "Friday", value: 5 },
+  { name: "Saturday", value: 6 },
 ];
 
 const timeSlots = Array.from({ length: 24 }, (_, i) => {
@@ -30,37 +36,134 @@ const timeSlots = Array.from({ length: 24 }, (_, i) => {
   return `${hour}:00`;
 });
 
+// Helper to convert HH:mm:ss to HH:mm
+const formatTimeForUI = (time: string): string => {
+  return time.substring(0, 5); // Takes HH:mm from HH:mm:ss
+};
+
+// Helper to convert HH:mm to HH:mm:ss
+const formatTimeForAPI = (time: string): string => {
+  return `${time}:00`;
+};
+
 export default function AvailabilityPage() {
-  const [availability, setAvailability] = useState(
+  const { data: availabilities, isLoading } = useAvailabilities();
+  const deleteAvailability = useDeleteAvailability();
+  const batchCreate = useBatchCreateAvailability();
+
+  const [availability, setAvailability] = useState<DayAvailability[]>(
     daysOfWeek.map((day) => ({
-      day,
-      enabled: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].includes(
-        day
-      ),
-      start: "09:00",
-      end: "17:00",
+      day: day.name,
+      dayOfWeek: day.value,
+      enabled: false,
+      slots: [{ start: "09:00", end: "17:00" }],
     }))
   );
+
+  // Load availabilities from API
+  useEffect(() => {
+    if (availabilities && availabilities.length > 0) {
+      const dayMap = new Map<number, DayAvailability>();
+
+      // Initialize all days
+      daysOfWeek.forEach((day) => {
+        dayMap.set(day.value, {
+          day: day.name,
+          dayOfWeek: day.value,
+          enabled: false,
+          slots: [],
+        });
+      });
+
+      // Group availabilities by day
+      availabilities.forEach((avail) => {
+        const day = dayMap.get(avail.dayOfWeek);
+        if (day) {
+          day.enabled = true;
+          day.slots.push({
+            id: avail.id,
+            start: formatTimeForUI(avail.startTime),
+            end: formatTimeForUI(avail.endTime),
+          });
+        }
+      });
+
+      // Convert to array in day order
+      const updatedAvailability = daysOfWeek.map((day) => {
+        const dayData = dayMap.get(day.value)!;
+        // If no slots, add default
+        if (dayData.enabled && dayData.slots.length === 0) {
+          dayData.slots = [{ start: "09:00", end: "17:00" }];
+        }
+        return dayData;
+      });
+
+      setAvailability(updatedAvailability);
+    }
+  }, [availabilities]);
 
   const handleToggle = (index: number) => {
     const newAvailability = [...availability];
     newAvailability[index].enabled = !newAvailability[index].enabled;
+    
+    // If enabling and no slots, add default
+    if (newAvailability[index].enabled && newAvailability[index].slots.length === 0) {
+      newAvailability[index].slots = [{ start: "09:00", end: "17:00" }];
+    }
+    
     setAvailability(newAvailability);
   };
 
   const handleTimeChange = (
-    index: number,
+    dayIndex: number,
+    slotIndex: number,
     field: "start" | "end",
     value: string
   ) => {
     const newAvailability = [...availability];
-    newAvailability[index][field] = value;
+    newAvailability[dayIndex].slots[slotIndex][field] = value;
     setAvailability(newAvailability);
   };
 
-  const handleSave = () => {
-    toast.success("Availability updated successfully!");
+  const handleSave = async () => {
+    // First, delete all existing availabilities
+    if (availabilities) {
+      await Promise.all(
+        availabilities.map((avail) => deleteAvailability.mutateAsync(avail.id))
+      );
+    }
+
+    // Then create new ones based on current state
+    const newSlots = availability
+      .filter((day) => day.enabled)
+      .flatMap((day) =>
+        day.slots.map((slot) => ({
+          dayOfWeek: day.dayOfWeek,
+          startTime: formatTimeForAPI(slot.start),
+          endTime: formatTimeForAPI(slot.end),
+          timezone: "UTC",
+        }))
+      );
+
+    if (newSlots.length > 0) {
+      batchCreate.mutate(newSlots);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex min-h-[400px] items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="body-sm text-muted-foreground">
+              Loading availability...
+            </p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -78,62 +181,69 @@ export default function AvailabilityPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {availability.map((slot, index) => (
+              {availability.map((dayData, dayIndex) => (
                 <div
-                  key={slot.day}
+                  key={dayData.day}
                   className="flex items-center gap-4 rounded-lg border border-border p-4"
                 >
                   <div className="flex items-center gap-3">
                     <Switch
-                      checked={slot.enabled}
-                      onCheckedChange={() => handleToggle(index)}
+                      checked={dayData.enabled}
+                      onCheckedChange={() => handleToggle(dayIndex)}
                     />
-                    <Label className="w-24 label-md">{slot.day}</Label>
+                    <Label className="w-24 label-md">{dayData.day}</Label>
                   </div>
 
-                  {slot.enabled && (
-                    <div className="flex flex-1 items-center gap-4">
-                      <Select
-                        value={slot.start}
-                        onValueChange={(value) =>
-                          handleTimeChange(index, "start", value)
-                        }
-                      >
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {timeSlots.map((time) => (
-                            <SelectItem key={time} value={time}>
-                              {time}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                  {dayData.enabled && (
+                    <div className="flex flex-1 flex-col gap-2">
+                      {dayData.slots.map((slot, slotIndex) => (
+                        <div
+                          key={slotIndex}
+                          className="flex items-center gap-4"
+                        >
+                          <Select
+                            value={slot.start}
+                            onValueChange={(value) =>
+                              handleTimeChange(dayIndex, slotIndex, "start", value)
+                            }
+                          >
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {timeSlots.map((time) => (
+                                <SelectItem key={time} value={time}>
+                                  {time}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
 
-                      <span className="text-muted-foreground">to</span>
+                          <span className="text-muted-foreground">to</span>
 
-                      <Select
-                        value={slot.end}
-                        onValueChange={(value) =>
-                          handleTimeChange(index, "end", value)
-                        }
-                      >
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {timeSlots.map((time) => (
-                            <SelectItem key={time} value={time}>
-                              {time}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                          <Select
+                            value={slot.end}
+                            onValueChange={(value) =>
+                              handleTimeChange(dayIndex, slotIndex, "end", value)
+                            }
+                          >
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {timeSlots.map((time) => (
+                                <SelectItem key={time} value={time}>
+                                  {time}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      ))}
                     </div>
                   )}
 
-                  {!slot.enabled && (
+                  {!dayData.enabled && (
                     <span className="body-sm text-muted-foreground">
                       Unavailable
                     </span>
@@ -143,7 +253,14 @@ export default function AvailabilityPage() {
             </div>
 
             <div className="mt-6 flex justify-end">
-              <Button onClick={handleSave}>Save Changes</Button>
+              <Button
+                onClick={handleSave}
+                disabled={batchCreate.isPending || deleteAvailability.isPending}
+              >
+                {batchCreate.isPending || deleteAvailability.isPending
+                  ? "Saving..."
+                  : "Save Changes"}
+              </Button>
             </div>
           </CardContent>
         </Card>
