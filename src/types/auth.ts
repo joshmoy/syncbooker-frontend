@@ -3,6 +3,8 @@ export interface User {
   name: string;
   email: string;
   username?: string;
+  displayPicture?: string | null;
+  banner?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }
