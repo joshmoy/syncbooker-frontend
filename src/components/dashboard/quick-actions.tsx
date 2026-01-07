@@ -1,36 +1,54 @@
+"use client";
+
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Link as LinkIcon, Settings } from "lucide-react";
-
-const actions = [
-  {
-    title: "Create Event Type",
-    description: "Add a new event type",
-    icon: Calendar,
-    href: "/dashboard/events/new",
-  },
-  {
-    title: "Set Availability",
-    description: "Update your schedule",
-    icon: Clock,
-    href: "/dashboard/availability",
-  },
-  {
-    title: "Share Link",
-    description: "Copy your booking link",
-    icon: LinkIcon,
-    href: "#",
-  },
-  {
-    title: "Settings",
-    description: "Manage your account",
-    icon: Settings,
-    href: "/dashboard/settings",
-  },
-];
+import { Calendar, Clock, Copy, Settings } from "lucide-react";
+import { useAuthStore } from "@/store/auth";
+import { toast } from "sonner";
 
 export function QuickActions() {
+  const { user } = useAuthStore();
+
+  const handleCopyLink = () => {
+    if (user?.username) {
+      const bookingLink = `${window.location.origin}/${user.username}`;
+      navigator.clipboard.writeText(bookingLink);
+      toast.success("Booking link copied to clipboard!");
+    }
+  };
+
+  const actions = [
+    {
+      title: "Create Event Type",
+      description: "Add a new event type",
+      icon: Calendar,
+      href: "/dashboard/events/new",
+      onClick: undefined,
+    },
+    {
+      title: "Set Availability",
+      description: "Update your schedule",
+      icon: Clock,
+      href: "/dashboard/availability",
+      onClick: undefined,
+    },
+    {
+      title: "Copy Booking Link",
+      description: `${user?.username ? `/${user.username}` : "Your booking link"}`,
+      icon: Copy,
+      href: undefined,
+      onClick: handleCopyLink,
+    },
+    {
+      title: "Settings",
+      description: "Manage your account",
+      icon: Settings,
+      href: "/dashboard/settings",
+      onClick: undefined,
+    },
+  ];
+
   return (
     <Card>
       <CardHeader>
@@ -38,11 +56,12 @@ export function QuickActions() {
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          {actions.map((action) => (
-            <Link key={action.title} href={action.href}>
+          {actions.map((action) => {
+            const content = (
               <Button
                 variant="ghost"
                 className="w-full justify-start gap-3 h-auto py-3"
+                onClick={action.onClick}
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
                   <action.icon className="h-5 w-5" />
@@ -54,8 +73,18 @@ export function QuickActions() {
                   </span>
                 </div>
               </Button>
-            </Link>
-          ))}
+            );
+
+            if (action.href) {
+              return (
+                <Link key={action.title} href={action.href}>
+                  {content}
+                </Link>
+              );
+            }
+
+            return <div key={action.title}>{content}</div>;
+          })}
         </div>
       </CardContent>
     </Card>

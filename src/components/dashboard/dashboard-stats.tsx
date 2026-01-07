@@ -1,37 +1,64 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, Clock, TrendingUp, Users } from "lucide-react";
+"use client";
 
-const stats = [
-  {
-    name: "Total Bookings",
-    value: "24",
-    change: "+12%",
-    icon: Calendar,
-  },
-  {
-    name: "This Week",
-    value: "8",
-    change: "+4",
-    icon: Clock,
-  },
-  {
-    name: "Event Types",
-    value: "3",
-    change: "Active",
-    icon: TrendingUp,
-  },
-  {
-    name: "Unique Visitors",
-    value: "156",
-    change: "+23%",
-    icon: Users,
-  },
-];
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Calendar, Clock, TrendingUp, Users } from "lucide-react";
+import { useDashboardStats } from "@/hooks/use-dashboard";
 
 export function DashboardStats() {
+  const { data: stats, isLoading } = useDashboardStats();
+
+  if (isLoading) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Card key={i}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2 flex-1">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-8 w-16" />
+                  <Skeleton className="h-4 w-16" />
+                </div>
+                <Skeleton className="h-12 w-12 rounded-lg" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  const statItems = [
+    {
+      name: "Total Bookings",
+      value: stats?.totalBookings.toString() || "0",
+      change: stats?.totalBookingsChange || "0%",
+      icon: Calendar,
+    },
+    {
+      name: "This Week",
+      value: stats?.weekBookings.toString() || "0",
+      change: stats?.weekBookingsChange || "0",
+      icon: Clock,
+    },
+    {
+      name: "Event Types",
+      value: stats?.eventTypesCount.toString() || "0",
+      change: "Active",
+      icon: TrendingUp,
+    },
+    {
+      name: "Unique Visitors",
+      value: stats?.uniqueVisitors.toString() || "0",
+      change: stats?.uniqueVisitorsChange || "0%",
+      icon: Users,
+    },
+  ];
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {stats.map((stat) => (
+      {statItems.map((stat) => (
         <Card key={stat.name}>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
