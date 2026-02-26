@@ -2,10 +2,11 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, Clock } from "lucide-react";
-import { useBookings } from "@/hooks/use-bookings";
+import { Calendar, Clock, Check, X } from "lucide-react";
+import { useBookings, useApproveBooking, useRejectBooking } from "@/hooks/use-bookings";
 import { format, isToday, isTomorrow, parseISO } from "date-fns";
 import { Booking } from "@/types/booking";
 
@@ -27,6 +28,7 @@ function getUpcomingBookings(bookings: Booking[]): Booking[] {
   return bookings
     .filter((booking) => {
       const startTime = parseISO(booking.startTime);
+      // Show both confirmed and pending bookings that haven't happened yet
       return startTime >= now && booking.status !== "cancelled";
     })
     .sort((a, b) => {
@@ -34,11 +36,13 @@ function getUpcomingBookings(bookings: Booking[]): Booking[] {
       const dateB = parseISO(b.startTime);
       return dateA.getTime() - dateB.getTime();
     })
-    .slice(0, 5);
+    .slice(0, 10); // Increased slice to show more if many are pending
 }
 
 export function UpcomingBookings() {
   const { data: bookings, isLoading } = useBookings();
+  const approveBooking = useApproveBooking();
+  const rejectBooking = useRejectBooking();
 
   if (isLoading) {
     return (
@@ -118,7 +122,11 @@ export function UpcomingBookings() {
                   </p>
                   <Badge
                     variant={
-                      booking.status === "confirmed" ? "default" : "secondary"
+                      booking.status === "confirmed"
+                        ? "default"
+                        : booking.status === "pending"
+                        ? "secondary"
+                        : "destructive"
                     }
                   >
                     {booking.status}
@@ -127,15 +135,39 @@ export function UpcomingBookings() {
                 <p className="body-sm text-muted-foreground">
                   {booking.inviteeName} • {booking.inviteeEmail}
                 </p>
-                <div className="flex items-center gap-4 pt-2">
-                  <div className="flex items-center gap-1 body-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    {formatBookingDate(booking.startTime)}
+                <div className="flex items-center justify-between pt-2">
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1 body-sm text-muted-foreground">
+                      <Calendar className="h-4 w-4" />
+                      {formatBookingDate(booking.startTime)}
+                    </div>
+                    <div className="flex items-center gap-1 body-sm text-muted-foreground">
+                      <Clock className="h-4 w-4" />
+                      {formatBookingTime(booking.startTime, booking.endTime)}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1 body-sm text-muted-foreground">
-                    <Clock className="h-4 w-4" />
-                    {formatBookingTime(booking.startTime, booking.endTime)}
-                  </div>
+
+                  {booking.status === "pending" && (
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 px-2 text-destructive hover:text-destructive"
+                        onClick={() => rejectBooking.mutate(booking.id)}
+                        disabled={rejectBooking.isPending || approveBooking.isPending}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="h-8 px-2"
+                        onClick={() => approveBooking.mutate(booking.id)}
+                        disabled={approveBooking.isPending || rejectBooking.isPending}
+                      >
+                        <Check className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

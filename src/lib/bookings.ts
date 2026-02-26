@@ -80,6 +80,28 @@ export const bookingsService = {
   },
 
   /**
+   * PROTECTED: Approve a booking
+   */
+  async approveBooking(id: string): Promise<Booking> {
+    const response = await apiInstance.patch<BookingResponse>(
+      `/bookings/${id}/approve`,
+      { status: "confirmed" }
+    );
+    return response.data.booking;
+  },
+
+  /**
+   * PROTECTED: Reject a booking
+   */
+  async rejectBooking(id: string): Promise<Booking> {
+    const response = await apiInstance.patch<BookingResponse>(
+      `/bookings/${id}/reject`,
+      { status: "cancelled" }
+    );
+    return response.data.booking;
+  },
+
+  /**
    * PROTECTED: Update a booking
    */
   async updateBooking(

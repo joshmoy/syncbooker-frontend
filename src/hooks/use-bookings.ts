@@ -147,3 +147,47 @@ export function useDeleteBooking() {
     },
   });
 }
+
+/**
+ * Hook to approve a booking (protected)
+ */
+export function useApproveBooking() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => bookingsService.approveBooking(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: bookingKeys.list() });
+      toast.success("Booking approved successfully!");
+    },
+    onError: (error: any) => {
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to approve booking.";
+      toast.error(message);
+    },
+  });
+}
+
+/**
+ * Hook to reject a booking (protected)
+ */
+export function useRejectBooking() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => bookingsService.rejectBooking(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: bookingKeys.list() });
+      toast.success("Booking rejected.");
+    },
+    onError: (error: any) => {
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to reject booking.";
+      toast.error(message);
+    },
+  });
+}

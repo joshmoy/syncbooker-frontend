@@ -24,16 +24,25 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useBookings, useUpdateBooking, useDeleteBooking } from "@/hooks/use-bookings";
+import { useBookings, useApproveBooking, useRejectBooking, useDeleteBooking } from "@/hooks/use-bookings";
 import type { Booking } from "@/types/booking";
 import { format, isPast } from "date-fns";
 
 export default function BookingsPage() {
   const { data: bookings, isLoading, error } = useBookings();
-  const updateBooking = useUpdateBooking("");
+  const approveBooking = useApproveBooking();
+  const rejectBooking = useRejectBooking();
   const deleteBooking = useDeleteBooking();
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [bookingToCancel, setBookingToCancel] = useState<string | null>(null);
+
+  const handleApprove = (id: string) => {
+    approveBooking.mutate(id);
+  };
+
+  const handleReject = (id: string) => {
+    rejectBooking.mutate(id);
+  };
 
   const handleCancelClick = (id: string) => {
     setBookingToCancel(id);
@@ -56,7 +65,11 @@ export default function BookingsPage() {
 
   const pastBookings = bookings?.filter(
     (b) =>
-      b.status === "cancelled" || isPast(new Date(b.startTime))
+      b.status !== "cancelled" && isPast(new Date(b.startTime))
+  ) || [];
+
+  const cancelledBookings = bookings?.filter(
+    (b) => b.status === "cancelled"
   ) || [];
 
   if (error) {
@@ -103,6 +116,7 @@ export default function BookingsPage() {
                 Upcoming ({upcomingBookings.length})
               </TabsTrigger>
               <TabsTrigger value="past">Past ({pastBookings.length})</TabsTrigger>
+              <TabsTrigger value="cancelled">Cancelled ({cancelledBookings.length})</TabsTrigger>
               <TabsTrigger value="all">All ({bookings.length})</TabsTrigger>
             </TabsList>
 
@@ -113,6 +127,9 @@ export default function BookingsPage() {
                     key={booking.id}
                     booking={booking}
                     onCancel={handleCancelClick}
+                    onApprove={handleApprove}
+                    onReject={handleReject}
+                    isProcessing={approveBooking.isPending || rejectBooking.isPending}
                   />
                 ))
               ) : (
@@ -133,6 +150,9 @@ export default function BookingsPage() {
                     key={booking.id}
                     booking={booking}
                     onCancel={handleCancelClick}
+                    onApprove={handleApprove}
+                    onReject={handleReject}
+                    isProcessing={approveBooking.isPending || rejectBooking.isPending}
                   />
                 ))
               ) : (
@@ -146,12 +166,38 @@ export default function BookingsPage() {
               )}
             </TabsContent>
 
+            <TabsContent value="cancelled" className="space-y-4">
+              {cancelledBookings.length > 0 ? (
+                cancelledBookings.map((booking) => (
+                  <BookingCard
+                    key={booking.id}
+                    booking={booking}
+                    onCancel={handleCancelClick}
+                    onApprove={handleApprove}
+                    onReject={handleReject}
+                    isProcessing={approveBooking.isPending || rejectBooking.isPending}
+                  />
+                ))
+              ) : (
+                <Card>
+                  <CardContent className="flex min-h-[200px] items-center justify-center p-8">
+                    <p className="body-md text-muted-foreground">
+                      No cancelled bookings
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+
             <TabsContent value="all" className="space-y-4">
               {bookings.map((booking) => (
                 <BookingCard
                   key={booking.id}
                   booking={booking}
                   onCancel={handleCancelClick}
+                  onApprove={handleApprove}
+                  onReject={handleReject}
+                  isProcessing={approveBooking.isPending || rejectBooking.isPending}
                 />
               ))}
             </TabsContent>
@@ -198,9 +244,15 @@ export default function BookingsPage() {
 function BookingCard({
   booking,
   onCancel,
+  onApprove,
+  onReject,
+  isProcessing,
 }: {
   booking: Booking;
   onCancel: (id: string) => void;
+  onApprove: (id: string) => void;
+  onReject: (id: string) => void;
+  isProcessing: boolean;
 }) {
   const startDate = new Date(booking.startTime);
   const endDate = new Date(booking.endTime);
@@ -245,11 +297,19 @@ function BookingCard({
                 {isUpcoming && booking.status !== "cancelled" && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
+                      <Button variant="ghost" size="sm" disabled={isProcessing}>
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      {booking.status === "pending" && (
+                        <DropdownMenuItem
+                          className="text-primary"
+                          onClick={() => onApprove(booking.id)}
+                        >
+                          Approve Booking
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem
                         className="text-destructive"
                         onClick={() => onCancel(booking.id)}
