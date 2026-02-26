@@ -4,6 +4,10 @@ import {
   RegisterResponse,
   LoginRequest,
   LoginResponse,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
   User,
 } from "@/types/auth";
 
@@ -44,6 +48,28 @@ export const authService = {
       localStorage.setItem("user", JSON.stringify(response.data.user));
     }
     
+    return response.data;
+  },
+
+  /**
+   * Forgot password
+   */
+  async forgotPassword(data: ForgotPasswordRequest): Promise<ForgotPasswordResponse> {
+    const response = await apiInstance.post<ForgotPasswordResponse>(
+      "/auth/forgot-password",
+      data
+    );
+    return response.data;
+  },
+
+  /**
+   * Reset password
+   */
+  async resetPassword(data: ResetPasswordRequest): Promise<ResetPasswordResponse> {
+    const response = await apiInstance.post<ResetPasswordResponse>(
+      "/auth/reset-password",
+      data
+    );
     return response.data;
   },
 
