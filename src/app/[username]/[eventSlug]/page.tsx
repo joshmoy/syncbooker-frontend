@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Calendar as CalendarIcon, Clock, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { usePublicEventType } from "@/hooks/use-event-types";
+import { useTrackVisitor } from "@/hooks/use-visitor";
 import { useAvailableSlots, usePublicBookings, useCreatePublicBooking } from "@/hooks/use-bookings";
 import { format, startOfDay, endOfDay, isSameDay } from "date-fns";
 import { generateSlotsFromBackendResponse } from "@/lib/slot-generator";
@@ -29,6 +30,10 @@ export default function BookingPage({
   const [notes, setNotes] = useState("");
 
   const { data: eventType, isLoading: eventLoading } = usePublicEventType(eventSlug);
+
+  // Track visitor
+  useTrackVisitor(eventType?.user?.username, `/${eventType?.user?.username}/${eventSlug}`);
+
   const createBooking = useCreatePublicBooking();
 
   // Fetch backend slots (these show one slot per day as samples)
