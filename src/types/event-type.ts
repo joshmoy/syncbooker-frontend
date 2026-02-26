@@ -7,6 +7,12 @@ export interface EventType {
   color: string | null;
   createdAt: string;
   updatedAt: string;
+  user?: {
+    name: string;
+    username: string;
+    displayPicture?: string | null;
+    banner?: string | null;
+  };
 }
 
 export interface CreateEventTypeRequest {
