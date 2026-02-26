@@ -26,6 +26,8 @@ export function useBookings() {
   return useQuery({
     queryKey: bookingKeys.list(),
     queryFn: () => bookingsService.getUserBookings(),
+    staleTime: 0,
+    refetchOnMount: true,
   });
 }
 

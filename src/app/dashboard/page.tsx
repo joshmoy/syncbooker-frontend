@@ -15,12 +15,13 @@ export default function DashboardPage() {
         <div>
           <h1 className="heading-lg">Dashboard</h1>
           <p className="body-md mt-2 text-muted-foreground">
-            Welcome back{user?.name ? `, ${user.name.split(" ")[0]}` : ""}! Here's an overview of your scheduling activity.
+            Welcome back{user?.name ? `, ${user.name.split(" ")[0]}` : ""}! Here&apos;s an overview of
+            your scheduling activity.
           </p>
         </div>
 
         <DashboardStats />
-        
+
         <div className="grid gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <UpcomingBookings />

@@ -33,7 +33,7 @@ export function DashboardStats() {
     {
       name: "Total Bookings",
       value: stats?.totalBookings.toString() || "0",
-      change: stats?.totalBookingsChange || "0%",
+      change: `${stats?.totalBookingsChange || "0%"} this week`,
       icon: Calendar,
     },
     {

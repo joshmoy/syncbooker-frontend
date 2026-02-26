@@ -14,5 +14,7 @@ export function useDashboardStats() {
   return useQuery({
     queryKey: dashboardKeys.stats(),
     queryFn: () => dashboardService.getDashboardStats(),
+    staleTime: 0,
+    refetchOnMount: true,
   });
 }
