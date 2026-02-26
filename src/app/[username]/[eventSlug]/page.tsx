@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use, useMemo } from "react";
+import { useState, use, useMemo } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,7 @@ import Link from "next/link";
 import { usePublicEventType } from "@/hooks/use-event-types";
 import { useTrackVisitor } from "@/hooks/use-visitor";
 import { useAvailableSlots, usePublicBookings, useCreatePublicBooking } from "@/hooks/use-bookings";
-import { format, startOfDay, endOfDay, isSameDay } from "date-fns";
+import { format, isSameDay } from "date-fns";
 import { generateSlotsFromBackendResponse } from "@/lib/slot-generator";
 
 export default function BookingPage({
@@ -32,7 +32,9 @@ export default function BookingPage({
   const { data: eventType, isLoading: eventLoading } = usePublicEventType(eventSlug);
 
   // Track visitor
-  useTrackVisitor(eventType?.user?.username, `/${eventType?.user?.username}/${eventSlug}`);
+  const visitorUsername = eventType?.user?.username;
+  const visitorPath = visitorUsername ? `/${visitorUsername}/${eventSlug}` : "";
+  useTrackVisitor(visitorUsername, visitorPath);
 
   const createBooking = useCreatePublicBooking();
 
@@ -134,6 +136,7 @@ export default function BookingPage({
       {/* Banner */}
       <div className="h-32 w-full bg-muted lg:h-48 relative overflow-hidden">
         {eventType.user?.banner ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
           <img
             src={eventType.user.banner}
             alt="User banner"
@@ -150,6 +153,7 @@ export default function BookingPage({
             <CardContent className="p-8 text-center">
               <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-foreground text-background overflow-hidden border-2 border-background">
                 {eventType.user?.displayPicture ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
                   <img
                     src={eventType.user.displayPicture}
                     alt={eventType.user.name}
@@ -184,6 +188,7 @@ export default function BookingPage({
           <div className="relative -mt-20 mb-8 flex flex-col items-center lg:items-start lg:flex-row lg:gap-6">
             <Avatar className="h-24 w-24 border-4 border-background shadow-lg lg:h-32 lg:w-32">
               {eventType.user?.displayPicture ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
                 <img
                   src={eventType.user.displayPicture}
                   alt={eventType.user.name}
