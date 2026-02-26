@@ -156,8 +156,9 @@ export function useApproveBooking() {
 
   return useMutation({
     mutationFn: (id: string) => bookingsService.approveBooking(id),
-    onSuccess: () => {
+    onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: bookingKeys.list() });
+      queryClient.invalidateQueries({ queryKey: bookingKeys.detail(id) });
       toast.success("Booking approved successfully!");
     },
     onError: (error: any) => {
@@ -178,8 +179,9 @@ export function useRejectBooking() {
 
   return useMutation({
     mutationFn: (id: string) => bookingsService.rejectBooking(id),
-    onSuccess: () => {
+    onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: bookingKeys.list() });
+      queryClient.invalidateQueries({ queryKey: bookingKeys.detail(id) });
       toast.success("Booking rejected.");
     },
     onError: (error: any) => {

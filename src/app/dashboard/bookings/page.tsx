@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useBookings, useApproveBooking, useRejectBooking, useDeleteBooking } from "@/hooks/use-bookings";
 import type { Booking } from "@/types/booking";
+import Link from "next/link";
 import { format, isPast } from "date-fns";
 
 export default function BookingsPage() {
@@ -275,8 +276,10 @@ function BookingCard({
           <div className="flex-1 space-y-3">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="heading-sm">
-                  {booking.eventType?.title || "Event"}
+                <h3 className="heading-sm hover:text-primary transition-colors">
+                  <Link href={`/dashboard/bookings/${booking.id}`}>
+                    {booking.eventType?.title || "Event"}
+                  </Link>
                 </h3>
                 <p className="body-sm text-muted-foreground mt-1">
                   {booking.inviteeName}
@@ -310,6 +313,11 @@ function BookingCard({
                           Approve Booking
                         </DropdownMenuItem>
                       )}
+                      <DropdownMenuItem asChild>
+                        <Link href={`/dashboard/bookings/${booking.id}`}>
+                          View Details
+                        </Link>
+                      </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-destructive"
                         onClick={() => onCancel(booking.id)}

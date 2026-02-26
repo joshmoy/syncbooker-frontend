@@ -9,6 +9,8 @@ export interface Booking {
   endTime: string; // ISO 8601
   status: BookingStatus;
   notes: string | null;
+  meetingLink: string | null;
+  googleEventId: string | null;
   createdAt: string;
   updatedAt: string;
   eventType?: {
