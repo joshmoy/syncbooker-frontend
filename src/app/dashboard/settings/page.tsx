@@ -8,9 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Camera, Upload, X, Loader2 } from "lucide-react";
+import { Camera, Upload, X, Loader2, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
+import { googleService } from "@/lib/google";
 import {
   useSettings,
   useUpdateSettings,
@@ -42,6 +44,8 @@ export default function SettingsPage() {
 
   const profileInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
+  const searchParams = useSearchParams();
+  const [isConnectingGoogle, setIsConnectingGoogle] = useState(false);
 
   // Load user settings on mount
   useEffect(() => {
@@ -51,6 +55,24 @@ export default function SettingsPage() {
       setUsername(settings.user.username || "");
     }
   }, [settings]);
+
+  // Check for google_connected param
+  useEffect(() => {
+    if (searchParams.get("google_connected") === "true") {
+      toast.success("Google Calendar connected successfully!");
+    }
+  }, [searchParams]);
+
+  const handleConnectGoogle = async () => {
+    try {
+      setIsConnectingGoogle(true);
+      const { url } = await googleService.getAuthUrl();
+      window.location.href = url;
+    } catch (error) {
+      toast.error("Failed to get Google authentication URL");
+      setIsConnectingGoogle(false);
+    }
+  };
 
   const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -228,6 +250,7 @@ export default function SettingsPage() {
           <TabsList>
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="account">Account</TabsTrigger>
+            <TabsTrigger value="integrations">Integrations</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
           </TabsList>
 
@@ -463,6 +486,42 @@ export default function SettingsPage() {
                 >
                   {updateSettings.isPending ? "Updating..." : "Update Password"}
                 </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="integrations">
+            <Card>
+              <CardHeader>
+                <CardTitle className="heading-sm">Integrations</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                      <Calendar className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="font-medium">Google Calendar</h4>
+                      <p className="body-sm text-muted-foreground">
+                        Sync your bookings and create Google Meet links automatically.
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant={settings?.user.googleRefreshToken ? "outline" : "default"}
+                    onClick={handleConnectGoogle}
+                    disabled={isConnectingGoogle}
+                  >
+                    {isConnectingGoogle ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : settings?.user.googleRefreshToken ? (
+                      "Connected"
+                    ) : (
+                      "Connect"
+                    )}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
