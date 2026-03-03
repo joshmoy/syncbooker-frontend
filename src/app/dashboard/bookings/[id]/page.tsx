@@ -7,21 +7,22 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Calendar, 
-  Clock, 
-  Mail, 
-  User, 
-  Video, 
-  ArrowLeft, 
-  CheckCircle2, 
-  XCircle, 
+  Calendar,
+  Clock,
+  Mail,
+  User,
+  Video,
+  ArrowLeft,
+  CheckCircle2,
+  XCircle,
   AlertCircle,
   Loader2,
   ExternalLink,
-  Plus
+  Plus,
 } from "lucide-react";
 import { useBooking, useApproveBooking, useRejectBooking, useGenerateMeetingLink } from "@/hooks/use-bookings";
 import { RescheduleDialog } from "@/components/dashboard/reschedule-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 import { format, isPast } from "date-fns";
 import { useState } from "react";
 
@@ -48,8 +49,78 @@ export default function BookingDetailsPage({ params }: { params: Promise<{ id: s
   if (isLoading) {
     return (
       <DashboardLayout>
-        <div className="flex min-h-[400px] items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="space-y-6">
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-9 w-9 rounded-md" />
+            <Skeleton className="h-8 w-48" />
+          </div>
+          <div className="grid gap-6 md:grid-cols-3">
+            <div className="md:col-span-2 space-y-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <Skeleton className="h-5 w-40" />
+                  <Skeleton className="h-6 w-20 rounded-full" />
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="flex items-start gap-3">
+                      <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+                      <div className="space-y-1.5">
+                        <Skeleton className="h-3 w-12" />
+                        <Skeleton className="h-5 w-36" />
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+                      <div className="space-y-1.5">
+                        <Skeleton className="h-3 w-12" />
+                        <Skeleton className="h-5 w-28" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="pt-4 border-t space-y-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-16 w-full rounded-lg" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            <div className="space-y-6">
+              <Card>
+                <CardHeader><Skeleton className="h-5 w-32" /></CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-8 w-8 rounded-full" />
+                    <div className="space-y-1.5">
+                      <Skeleton className="h-3 w-10" />
+                      <Skeleton className="h-4 w-28" />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-8 w-8 rounded-full" />
+                    <div className="space-y-1.5">
+                      <Skeleton className="h-3 w-10" />
+                      <Skeleton className="h-4 w-40" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader><Skeleton className="h-5 w-20" /></CardHeader>
+                <CardContent className="space-y-4">
+                  {[...Array(2)].map((_, i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <Skeleton className="mt-1 h-2 w-2 rounded-full shrink-0" />
+                      <div className="space-y-1.5">
+                        <Skeleton className="h-3 w-16" />
+                        <Skeleton className="h-3 w-28" />
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
       </DashboardLayout>
     );
