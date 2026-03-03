@@ -24,7 +24,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth";
 import { useLogout } from "@/hooks/use-auth";
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, exact: true },
@@ -38,16 +38,19 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, initialize } = useAuthStore();
   const handleLogout = useLogout();
-  const [mounted, setMounted] = useState(false);
+  const isClient = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   useEffect(() => {
-    setMounted(true);
     initialize();
   }, [initialize]);
 
   // Get initials with fallback
   const getInitials = () => {
-    if (!mounted || !user?.name) return "U";
+    if (!isClient || !user?.name) return "U";
     return user.name
       .split(" ")
       .map((n) => n[0])
@@ -101,10 +104,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                   </Avatar>
                   <div className="flex flex-col items-start text-left">
                     <span className="label-md">
-                      {mounted && user?.name ? user.name : "User"}
+                      {isClient && user?.name ? user.name : "User"}
                     </span>
                     <span className="body-sm text-muted-foreground">
-                      {mounted && user?.email ? user.email : "Loading..."}
+                      {isClient && user?.email ? user.email : "Loading..."}
                     </span>
                   </div>
                 </Button>

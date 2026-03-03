@@ -155,7 +155,7 @@ export default function BookingPage({
               <p className="body-md text-muted-foreground mb-6">
                 Your meeting has been scheduled. A confirmation email has been sent to {email}.
               </p>
-              <div className="space-y-2 rounded-lg border border-border bg-muted/50 p-4">
+              <div className="space-y-2 rounded-lg bg-muted/50 p-4">
                 <div className="flex items-center justify-center gap-2 body-md">
                   <CalendarIcon className="h-4 w-4" />
                   {date && format(date, "EEEE, MMMM d, yyyy")}

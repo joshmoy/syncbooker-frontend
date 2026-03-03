@@ -406,7 +406,7 @@ export default function SettingsPage() {
                   <Label htmlFor="username">Username</Label>
                   <div className="flex items-center gap-2">
                     <span className="body-sm text-muted-foreground">
-                      syncbooker.com/
+                      {new URL(process.env.NEXT_PUBLIC_APP_URL || "https://syncbooker.com").host}/
                     </span>
                     <Input
                       id="username"

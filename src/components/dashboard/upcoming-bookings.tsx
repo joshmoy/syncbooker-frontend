@@ -36,7 +36,7 @@ function getUpcomingBookings(bookings: Booking[]): Booking[] {
       const dateB = parseISO(b.startTime);
       return dateA.getTime() - dateB.getTime();
     })
-    .slice(0, 10); // Increased slice to show more if many are pending
+    .slice(0, 5);
 }
 
 export function UpcomingBookings() {
