@@ -51,32 +51,32 @@ apiInstance.interceptors.response.use(
               window.location.href = "/login";
             }
           }
-          toast.error("Session expired. Please login again.");
+          toast.error("Session expired. Please login again.", { id: "session-expired" });
           break;
         case 403:
-          toast.error("You don't have permission to perform this action.");
+          toast.error("You don't have permission to perform this action.", { id: "forbidden" });
           break;
         case 404:
-          toast.error("Resource not found.");
+          // 404s are often handled per-call; skip global toast
           break;
         case 409:
           // Conflict errors are handled by the calling hook's onError
           break;
         case 422:
-          toast.error(message || "Validation error.");
+          toast.error(message || "Validation error.", { id: "validation-error" });
           break;
         case 500:
-          toast.error("Server error. Please try again later.");
+          toast.error("Server error. Please try again later.", { id: "server-error" });
           break;
         default:
-          toast.error(message);
+          toast.error(message, { id: `api-error-${status}` });
       }
     } else if (error.request) {
       // Request was made but no response received
-      toast.error("Network error. Please check your connection.");
+      toast.error("Network error. Please check your connection.", { id: "network-error" });
     } else {
       // Something else happened
-      toast.error("An unexpected error occurred.");
+      toast.error("An unexpected error occurred.", { id: "unexpected-error" });
     }
 
     return Promise.reject(error);
