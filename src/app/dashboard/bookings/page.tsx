@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Clock, Mail, MoreVertical } from "lucide-react";
+import { Calendar, CalendarX, Clock, Mail, MoreVertical, XCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
@@ -170,10 +170,12 @@ export default function BookingsPage() {
                 ))
               ) : (
                 <Card>
-                  <CardContent className="flex min-h-[200px] items-center justify-center p-8">
-                    <p className="body-md text-muted-foreground">
-                      No upcoming bookings
-                    </p>
+                  <CardContent className="flex min-h-[200px] flex-col items-center justify-center gap-3 p-8 text-center">
+                    <Calendar className="h-10 w-10 text-muted-foreground/50" />
+                    <div>
+                      <p className="heading-sm">No upcoming bookings</p>
+                      <p className="body-sm text-muted-foreground mt-1">New bookings will appear here</p>
+                    </div>
                   </CardContent>
                 </Card>
               )}
@@ -194,10 +196,12 @@ export default function BookingsPage() {
                 ))
               ) : (
                 <Card>
-                  <CardContent className="flex min-h-[200px] items-center justify-center p-8">
-                    <p className="body-md text-muted-foreground">
-                      No past bookings
-                    </p>
+                  <CardContent className="flex min-h-[200px] flex-col items-center justify-center gap-3 p-8 text-center">
+                    <Clock className="h-10 w-10 text-muted-foreground/50" />
+                    <div>
+                      <p className="heading-sm">No past bookings</p>
+                      <p className="body-sm text-muted-foreground mt-1">Completed meetings will show up here</p>
+                    </div>
                   </CardContent>
                 </Card>
               )}
@@ -218,10 +222,12 @@ export default function BookingsPage() {
                 ))
               ) : (
                 <Card>
-                  <CardContent className="flex min-h-[200px] items-center justify-center p-8">
-                    <p className="body-md text-muted-foreground">
-                      No cancelled bookings
-                    </p>
+                  <CardContent className="flex min-h-[200px] flex-col items-center justify-center gap-3 p-8 text-center">
+                    <XCircle className="h-10 w-10 text-muted-foreground/50" />
+                    <div>
+                      <p className="heading-sm">No cancelled bookings</p>
+                      <p className="body-sm text-muted-foreground mt-1">Cancelled meetings will appear here</p>
+                    </div>
                   </CardContent>
                 </Card>
               )}
@@ -243,12 +249,12 @@ export default function BookingsPage() {
           </Tabs>
         ) : (
           <Card>
-            <CardContent className="flex min-h-[400px] flex-col items-center justify-center p-8">
-              <div className="text-center">
-                <h3 className="heading-sm mb-2">No bookings yet</h3>
+            <CardContent className="flex min-h-[400px] flex-col items-center justify-center gap-4 p-8 text-center">
+              <CalendarX className="h-12 w-12 text-muted-foreground/40" />
+              <div>
+                <h3 className="heading-sm mb-1">No bookings yet</h3>
                 <p className="body-md text-muted-foreground">
-                  Your bookings will appear here once people start booking time with
-                  you
+                  Your bookings will appear here once people start booking time with you
                 </p>
               </div>
             </CardContent>

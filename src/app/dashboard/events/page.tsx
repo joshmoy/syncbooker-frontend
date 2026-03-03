@@ -5,7 +5,7 @@ import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Clock, Copy, MoreVertical } from "lucide-react";
+import { Plus, Clock, Copy, MoreVertical, CalendarOff } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
@@ -178,19 +178,20 @@ export default function EventTypesPage() {
           </div>
         ) : (
           <Card>
-            <CardContent className="flex min-h-[400px] flex-col items-center justify-center p-8">
-              <div className="text-center">
-                <h3 className="heading-sm mb-2">No event types yet</h3>
-                <p className="body-md mb-6 text-muted-foreground">
+            <CardContent className="flex min-h-[400px] flex-col items-center justify-center gap-4 p-8 text-center">
+              <CalendarOff className="h-12 w-12 text-muted-foreground/40" />
+              <div>
+                <h3 className="heading-sm mb-1">No event types yet</h3>
+                <p className="body-md text-muted-foreground">
                   Create your first event type to start accepting bookings
                 </p>
-                <Link href="/dashboard/events/new">
-                  <Button>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create Event Type
-                  </Button>
-                </Link>
               </div>
+              <Link href="/dashboard/events/new">
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Event Type
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         )}
