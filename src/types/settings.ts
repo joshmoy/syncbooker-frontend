@@ -13,6 +13,7 @@ export interface UserSettings {
 export interface UpdateSettingsRequest {
   name?: string;
   username?: string;
+  currentPassword?: string;
   password?: string;
 }
 

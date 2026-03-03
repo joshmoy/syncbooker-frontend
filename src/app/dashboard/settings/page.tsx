@@ -196,13 +196,18 @@ export default function SettingsPage() {
   };
 
   const handleSaveAccount = () => {
-    if (newPassword && newPassword !== confirmPassword) {
+    if (!currentPassword) {
+      toast.error("Please enter your current password");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
       toast.error("New passwords do not match");
       return;
     }
 
     updateSettings.mutate({
-      password: newPassword || undefined,
+      currentPassword,
+      password: newPassword,
     }, {
       onSuccess: () => {
         setCurrentPassword("");
