@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -103,70 +103,63 @@ export default function AvailabilityPage() {
   const { data: availabilities, isLoading } = useAvailabilities();
   const replaceAvailabilities = useReplaceAvailabilities();
 
-  const [availability, setAvailability] = useState<DayAvailability[]>(
-    daysOfWeek.map((day) => ({
-      day: day.name,
-      dayOfWeek: day.value,
-      enabled: false,
-      slots: [{ start: "09:00", end: "17:00" }],
-    }))
-  );
+  // Local edits — null means the user hasn't changed anything yet
+  const [edits, setEdits] = useState<DayAvailability[] | null>(null);
 
-  // Load availabilities from API
-  useEffect(() => {
-    if (availabilities && availabilities.length > 0) {
-      const dayMap = new Map<number, DayAvailability>();
-
-      // Initialize all days
-      daysOfWeek.forEach((day) => {
-        dayMap.set(day.value, {
-          day: day.name,
-          dayOfWeek: day.value,
-          enabled: false,
-          slots: [],
-        });
-      });
-
-      // Group availabilities by day
-      availabilities.forEach((avail) => {
-        const day = dayMap.get(avail.dayOfWeek);
-        if (day) {
-          day.enabled = true;
-          day.slots.push({
-            id: avail.id,
-            start: formatTimeForUI(avail.startTime),
-            end: formatTimeForUI(avail.endTime),
-          });
-        }
-      });
-
-      // Convert to array in day order
-      const updatedAvailability = daysOfWeek.map((day) => {
-        const dayData = dayMap.get(day.value)!;
-        // If no slots, add default
-        if (dayData.enabled && dayData.slots.length === 0) {
-          dayData.slots = [{ start: "09:00", end: "17:00" }];
-        }
-        return dayData;
-      });
-
-      setAvailability(updatedAvailability);
+  // Derived from server data; used when there are no local edits
+  const serverAvailability = useMemo<DayAvailability[]>(() => {
+    if (!availabilities || availabilities.length === 0) {
+      return daysOfWeek.map((day) => ({
+        day: day.name,
+        dayOfWeek: day.value,
+        enabled: false,
+        slots: [{ start: "09:00", end: "17:00" }],
+      }));
     }
+
+    const dayMap = new Map<number, DayAvailability>();
+    daysOfWeek.forEach((day) => {
+      dayMap.set(day.value, {
+        day: day.name,
+        dayOfWeek: day.value,
+        enabled: false,
+        slots: [],
+      });
+    });
+
+    availabilities.forEach((avail) => {
+      const day = dayMap.get(avail.dayOfWeek);
+      if (day) {
+        day.enabled = true;
+        day.slots.push({
+          id: avail.id,
+          start: formatTimeForUI(avail.startTime),
+          end: formatTimeForUI(avail.endTime),
+        });
+      }
+    });
+
+    return daysOfWeek.map((day) => {
+      const dayData = dayMap.get(day.value)!;
+      if (dayData.enabled && dayData.slots.length === 0) {
+        dayData.slots = [{ start: "09:00", end: "17:00" }];
+      }
+      return dayData;
+    });
   }, [availabilities]);
 
-  const handleToggle = (index: number) => {
-    const newAvailability = [...availability];
-    newAvailability[index].enabled = !newAvailability[index].enabled;
+  const availability = edits ?? serverAvailability;
+  const setAvailability = (next: DayAvailability[]) => setEdits(next);
 
-    // If enabling and no slots, add default
-    if (
-      newAvailability[index].enabled &&
-      newAvailability[index].slots.length === 0
-    ) {
-      newAvailability[index].slots = [{ start: "09:00", end: "17:00" }];
+  const handleToggle = (index: number) => {
+    const next = structuredClone(availability);
+    next[index].enabled = !next[index].enabled;
+
+    if (next[index].enabled && next[index].slots.length === 0) {
+      next[index].slots = [{ start: "09:00", end: "17:00" }];
     }
 
-    setAvailability(newAvailability);
+    setAvailability(next);
   };
 
   const handleTimeChange = (
@@ -175,32 +168,29 @@ export default function AvailabilityPage() {
     field: "start" | "end",
     value: string
   ) => {
-    const newAvailability = [...availability];
-    newAvailability[dayIndex].slots[slotIndex][field] = value;
-    setAvailability(newAvailability);
+    const next = structuredClone(availability);
+    next[dayIndex].slots[slotIndex][field] = value;
+    setAvailability(next);
   };
 
   const handleAddSlot = (dayIndex: number) => {
-    const newAvailability = [...availability];
-    const currentSlots = newAvailability[dayIndex].slots;
+    const next = structuredClone(availability);
+    const currentSlots = next[dayIndex].slots;
 
-    // Find a good default time for new slot
     let newStart = "14:00";
     let newEnd = "17:00";
 
-    // If there are existing slots, add after the last one
     if (currentSlots.length > 0) {
       const lastSlot = currentSlots[currentSlots.length - 1];
       const lastEndMinutes = timeToMinutes(lastSlot.end);
 
-      // Add 1 hour after last slot ends
       const newStartMinutes = lastEndMinutes + 60;
       if (newStartMinutes < 24 * 60) {
         const hours = Math.floor(newStartMinutes / 60);
         const minutes = newStartMinutes % 60;
         newStart = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
 
-        const newEndMinutes = newStartMinutes + 180; // 3 hours later
+        const newEndMinutes = newStartMinutes + 180;
         if (newEndMinutes < 24 * 60) {
           const endHours = Math.floor(newEndMinutes / 60);
           const endMinutes = newEndMinutes % 60;
@@ -209,24 +199,22 @@ export default function AvailabilityPage() {
       }
     }
 
-    newAvailability[dayIndex].slots.push({ start: newStart, end: newEnd });
-    setAvailability(newAvailability);
+    next[dayIndex].slots.push({ start: newStart, end: newEnd });
+    setAvailability(next);
   };
 
   const handleRemoveSlot = (dayIndex: number, slotIndex: number) => {
-    const newAvailability = [...availability];
-    newAvailability[dayIndex].slots.splice(slotIndex, 1);
+    const next = structuredClone(availability);
+    next[dayIndex].slots.splice(slotIndex, 1);
 
-    // If no slots left, disable the day
-    if (newAvailability[dayIndex].slots.length === 0) {
-      newAvailability[dayIndex].enabled = false;
+    if (next[dayIndex].slots.length === 0) {
+      next[dayIndex].enabled = false;
     }
 
-    setAvailability(newAvailability);
+    setAvailability(next);
   };
 
   const handleSave = () => {
-    // Validate all enabled days
     for (const day of availability) {
       if (day.enabled && day.slots.length > 0) {
         const validation = validateDaySlots(day.slots);
@@ -248,7 +236,9 @@ export default function AvailabilityPage() {
         }))
       );
 
-    replaceAvailabilities.mutate(slots);
+    replaceAvailabilities.mutate(slots, {
+      onSuccess: () => setEdits(null),
+    });
   };
 
   if (isLoading) {
