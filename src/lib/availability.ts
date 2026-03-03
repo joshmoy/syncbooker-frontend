@@ -94,8 +94,15 @@ export const availabilityService = {
   async batchCreateAvailability(
     slots: CreateAvailabilityRequest[]
   ): Promise<Availability[]> {
-    const promises = slots.map((slot) => this.createAvailability(slot));
-    const results = await Promise.all(promises);
-    return results.map((result) => result.availability);
+    const settled = await Promise.allSettled(
+      slots.map((slot) => this.createAvailability(slot))
+    );
+    const failure = settled.find(
+      (r): r is PromiseRejectedResult => r.status === "rejected"
+    );
+    if (failure) throw failure.reason;
+    return (settled as PromiseFulfilledResult<AvailabilityResponse>[]).map(
+      (r) => r.value.availability
+    );
   },
 };

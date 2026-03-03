@@ -59,6 +59,9 @@ apiInstance.interceptors.response.use(
         case 404:
           toast.error("Resource not found.");
           break;
+        case 409:
+          // Conflict errors are handled by the calling hook's onError
+          break;
         case 422:
           toast.error(message || "Validation error.");
           break;

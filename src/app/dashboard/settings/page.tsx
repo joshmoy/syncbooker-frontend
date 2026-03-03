@@ -517,14 +517,14 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <Button
-                    variant={settings?.user.googleConnected ? "outline" : "default"}
+                    variant="outline"
                     onClick={handleConnectGoogle}
-                    disabled={isConnectingGoogle || !!settings?.user.googleConnected}
+                    disabled={isConnectingGoogle}
                   >
                     {isConnectingGoogle ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : settings?.user.googleConnected ? (
-                      "Connected"
+                      "Reconnect"
                     ) : (
                       "Connect"
                     )}
