@@ -322,7 +322,7 @@ function BookingCard({
                         className="text-destructive"
                         onClick={() => onCancel(booking.id)}
                       >
-                        Cancel Booking
+                        {booking.status === "pending" ? "Reject" : "Cancel Booking"}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

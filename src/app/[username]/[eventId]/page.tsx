@@ -19,9 +19,9 @@ import { format, isSameDay } from "date-fns";
 export default function BookingPage({
   params,
 }: {
-  params: Promise<{ username: string; eventSlug: string }>;
+  params: Promise<{ username: string; eventId: string }>;
 }) {
-  const { eventSlug } = use(params);
+  const { eventId } = use(params);
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [step, setStep] = useState<"select" | "details" | "confirmed">("select");
@@ -29,11 +29,11 @@ export default function BookingPage({
   const [email, setEmail] = useState("");
   const [notes, setNotes] = useState("");
 
-  const { data: eventType, isLoading: eventLoading } = usePublicEventType(eventSlug);
+  const { data: eventType, isLoading: eventLoading } = usePublicEventType(eventId);
 
   // Track visitor
   const visitorUsername = eventType?.user?.username;
-  const visitorPath = visitorUsername ? `/${visitorUsername}/${eventSlug}` : "";
+  const visitorPath = visitorUsername ? `/${visitorUsername}/${eventId}` : "";
   useTrackVisitor(visitorUsername, visitorPath);
 
   const createBooking = useCreatePublicBooking();
@@ -42,7 +42,7 @@ export default function BookingPage({
     data: backendSlots,
     isLoading: slotsLoading,
     error: slotsError,
-  } = useAvailableSlots(eventSlug);
+  } = useAvailableSlots(eventId);
 
   // Filter the backend's pre-computed slots to those matching the selected date
   const slots = useMemo(() => {
