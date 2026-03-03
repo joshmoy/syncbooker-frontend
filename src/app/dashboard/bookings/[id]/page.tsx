@@ -21,7 +21,7 @@ import {
   Plus
 } from "lucide-react";
 import { useBooking, useApproveBooking, useRejectBooking, useGenerateMeetingLink } from "@/hooks/use-bookings";
-import { format } from "date-fns";
+import { format, isPast } from "date-fns";
 
 export default function BookingDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -154,7 +154,7 @@ export default function BookingDetailsPage({ params }: { params: Promise<{ id: s
                       </Button>
                     </div>
                   </div>
-                ) : booking.status === "confirmed" && (
+                ) : booking.status === "confirmed" && !isPast(new Date(booking.startTime)) && (
                   <div className="pt-4 border-t">
                     <h4 className="text-sm font-semibold mb-4">Location</h4>
                     <div className="flex items-center justify-between rounded-lg border border-dashed p-4">
@@ -193,7 +193,7 @@ export default function BookingDetailsPage({ params }: { params: Promise<{ id: s
               </CardContent>
             </Card>
 
-            {booking.status === "pending" && (
+            {booking.status === "pending" && !isPast(new Date(booking.startTime)) && (
               <div className="flex gap-4">
                 <Button 
                   className="flex-1 h-12" 
