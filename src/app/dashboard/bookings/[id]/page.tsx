@@ -17,9 +17,10 @@ import {
   XCircle, 
   AlertCircle,
   Loader2,
-  ExternalLink
+  ExternalLink,
+  Plus
 } from "lucide-react";
-import { useBooking, useApproveBooking, useRejectBooking } from "@/hooks/use-bookings";
+import { useBooking, useApproveBooking, useRejectBooking, useGenerateMeetingLink } from "@/hooks/use-bookings";
 import { format } from "date-fns";
 
 export default function BookingDetailsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -28,6 +29,7 @@ export default function BookingDetailsPage({ params }: { params: Promise<{ id: s
   const { data: booking, isLoading, error } = useBooking(id);
   const approveBooking = useApproveBooking();
   const rejectBooking = useRejectBooking();
+  const generateMeetingLink = useGenerateMeetingLink();
 
   const handleApprove = () => {
     approveBooking.mutate(id);
@@ -35,6 +37,10 @@ export default function BookingDetailsPage({ params }: { params: Promise<{ id: s
 
   const handleReject = () => {
     rejectBooking.mutate(id);
+  };
+
+  const handleGenerateMeetingLink = () => {
+    generateMeetingLink.mutate(id);
   };
 
   if (isLoading) {
@@ -130,7 +136,7 @@ export default function BookingDetailsPage({ params }: { params: Promise<{ id: s
                   </div>
                 </div>
 
-                {booking.meetingLink && (
+                {booking.meetingLink ? (
                   <div className="pt-4 border-t">
                     <h4 className="text-sm font-semibold mb-4">Location</h4>
                     <div className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/5 p-4">
@@ -145,6 +151,32 @@ export default function BookingDetailsPage({ params }: { params: Promise<{ id: s
                         <a href={booking.meetingLink} target="_blank" rel="noopener noreferrer">
                           Join Meeting <ExternalLink className="ml-2 h-3 w-3" />
                         </a>
+                      </Button>
+                    </div>
+                  </div>
+                ) : booking.status === "confirmed" && (
+                  <div className="pt-4 border-t">
+                    <h4 className="text-sm font-semibold mb-4">Location</h4>
+                    <div className="flex items-center justify-between rounded-lg border border-dashed p-4">
+                      <div className="flex items-center gap-3">
+                        <Video className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <p className="font-medium">No meeting link</p>
+                          <p className="text-xs text-muted-foreground">Generate a Google Meet link for this booking</p>
+                        </div>
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleGenerateMeetingLink}
+                        disabled={generateMeetingLink.isPending}
+                      >
+                        {generateMeetingLink.isPending ? (
+                          <Loader2 className="h-3 w-3 animate-spin mr-2" />
+                        ) : (
+                          <Plus className="h-3 w-3 mr-2" />
+                        )}
+                        Generate Link
                       </Button>
                     </div>
                   </div>

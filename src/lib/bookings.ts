@@ -102,6 +102,16 @@ export const bookingsService = {
   },
 
   /**
+   * PROTECTED: Generate meeting link for a confirmed booking
+   */
+  async generateMeetingLink(id: string): Promise<Booking> {
+    const response = await apiInstance.post<BookingResponse>(
+      `/bookings/${id}/generate-meeting-link`
+    );
+    return response.data.booking;
+  },
+
+  /**
    * PROTECTED: Update a booking
    */
   async updateBooking(

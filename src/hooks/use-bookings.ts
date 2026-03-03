@@ -193,3 +193,26 @@ export function useRejectBooking() {
     },
   });
 }
+
+/**
+ * Hook to generate meeting link for a booking (protected)
+ */
+export function useGenerateMeetingLink() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => bookingsService.generateMeetingLink(id),
+    onSuccess: (booking) => {
+      queryClient.invalidateQueries({ queryKey: bookingKeys.list() });
+      queryClient.invalidateQueries({ queryKey: bookingKeys.detail(booking.id) });
+      toast.success("Meeting link generated successfully!");
+    },
+    onError: (error: any) => {
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to generate meeting link.";
+      toast.error(message);
+    },
+  });
+}
