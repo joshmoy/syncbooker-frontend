@@ -108,16 +108,15 @@ export function useDeleteAvailability() {
 }
 
 /**
- * Hook to batch create multiple availability slots
+ * Hook to atomically replace all availability slots
  */
-export function useBatchCreateAvailability() {
+export function useReplaceAvailabilities() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (slots: CreateAvailabilityRequest[]) =>
-      availabilityService.batchCreateAvailability(slots),
+      availabilityService.replaceAvailabilities(slots),
     onSuccess: () => {
-      // Invalidate and refetch availability list
       queryClient.invalidateQueries({ queryKey: availabilityKeys.list() });
       toast.success("Availability updated successfully!");
     },

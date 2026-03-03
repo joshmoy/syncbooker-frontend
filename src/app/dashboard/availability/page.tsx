@@ -17,8 +17,7 @@ import { Loader2, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   useAvailabilities,
-  useDeleteAvailability,
-  useBatchCreateAvailability,
+  useReplaceAvailabilities,
 } from "@/hooks/use-availability";
 import type { DayAvailability } from "@/types/availability";
 
@@ -80,7 +79,7 @@ const validateDaySlots = (
     if (!validateTimeSlot(slot.start, slot.end)) {
       return {
         valid: false,
-        error: `Invalid time slot: ${slot.start} must be before ${slot.end}`,
+        error: `Invalid time slot: end time (${slot.end}) must be after start time (${slot.start})`,
       };
     }
   }
@@ -102,8 +101,7 @@ const validateDaySlots = (
 
 export default function AvailabilityPage() {
   const { data: availabilities, isLoading } = useAvailabilities();
-  const deleteAvailability = useDeleteAvailability();
-  const batchCreate = useBatchCreateAvailability();
+  const replaceAvailabilities = useReplaceAvailabilities();
 
   const [availability, setAvailability] = useState<DayAvailability[]>(
     daysOfWeek.map((day) => ({
@@ -227,7 +225,7 @@ export default function AvailabilityPage() {
     setAvailability(newAvailability);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     // Validate all enabled days
     for (const day of availability) {
       if (day.enabled && day.slots.length > 0) {
@@ -239,15 +237,7 @@ export default function AvailabilityPage() {
       }
     }
 
-    // First, delete all existing availabilities
-    if (availabilities) {
-      await Promise.all(
-        availabilities.map((avail) => deleteAvailability.mutateAsync(avail.id))
-      );
-    }
-
-    // Then create new ones based on current state
-    const newSlots = availability
+    const slots = availability
       .filter((day) => day.enabled)
       .flatMap((day) =>
         day.slots.map((slot) => ({
@@ -258,11 +248,7 @@ export default function AvailabilityPage() {
         }))
       );
 
-    if (newSlots.length > 0) {
-      batchCreate.mutate(newSlots);
-    } else {
-      toast.success("Availability updated successfully!");
-    }
+    replaceAvailabilities.mutate(slots);
   };
 
   if (isLoading) {
@@ -396,7 +382,7 @@ export default function AvailabilityPage() {
                       {dayData.slots.length > 1 &&
                         !validateDaySlots(dayData.slots).valid && (
                           <div className="text-destructive body-sm mt-2 flex items-center gap-2">
-                            <span>⚠️ {validateDaySlots(dayData.slots).error}</span>
+                            <span>{validateDaySlots(dayData.slots).error}</span>
                           </div>
                         )}
                     </div>
@@ -416,11 +402,9 @@ export default function AvailabilityPage() {
             <div className="mt-6 flex justify-end">
               <Button
                 onClick={handleSave}
-                disabled={batchCreate.isPending || deleteAvailability.isPending}
+                disabled={replaceAvailabilities.isPending}
               >
-                {batchCreate.isPending || deleteAvailability.isPending
-                  ? "Saving..."
-                  : "Save Changes"}
+                {replaceAvailabilities.isPending ? "Saving..." : "Save Changes"}
               </Button>
             </div>
           </CardContent>

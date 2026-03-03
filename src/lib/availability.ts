@@ -89,20 +89,15 @@ export const availabilityService = {
   },
 
   /**
-   * Batch create multiple availability slots (for setting up full week)
+   * Replace all availability slots atomically (PUT /availability)
    */
-  async batchCreateAvailability(
+  async replaceAvailabilities(
     slots: CreateAvailabilityRequest[]
   ): Promise<Availability[]> {
-    const settled = await Promise.allSettled(
-      slots.map((slot) => this.createAvailability(slot))
+    const response = await apiInstance.put<AvailabilitiesResponse>(
+      "/availability",
+      { slots }
     );
-    const failure = settled.find(
-      (r): r is PromiseRejectedResult => r.status === "rejected"
-    );
-    if (failure) throw failure.reason;
-    return (settled as PromiseFulfilledResult<AvailabilityResponse>[]).map(
-      (r) => r.value.availability
-    );
+    return response.data.availabilities;
   },
 };
