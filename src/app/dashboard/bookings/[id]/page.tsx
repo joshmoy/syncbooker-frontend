@@ -21,7 +21,9 @@ import {
   Plus
 } from "lucide-react";
 import { useBooking, useApproveBooking, useRejectBooking, useGenerateMeetingLink } from "@/hooks/use-bookings";
+import { RescheduleDialog } from "@/components/dashboard/reschedule-dialog";
 import { format, isPast } from "date-fns";
+import { useState } from "react";
 
 export default function BookingDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -79,6 +81,8 @@ export default function BookingDetailsPage({ params }: { params: Promise<{ id: s
         return <Badge variant="outline">{status}</Badge>;
     }
   };
+
+  const [rescheduleOpen, setRescheduleOpen] = useState(false);
 
   const isProcessing = approveBooking.isPending || rejectBooking.isPending;
 
@@ -195,8 +199,8 @@ export default function BookingDetailsPage({ params }: { params: Promise<{ id: s
 
             {booking.status === "pending" && !isPast(new Date(booking.startTime)) && (
               <div className="flex gap-4">
-                <Button 
-                  className="flex-1 h-12" 
+                <Button
+                  className="flex-1 h-12"
                   onClick={handleApprove}
                   disabled={isProcessing}
                 >
@@ -207,8 +211,8 @@ export default function BookingDetailsPage({ params }: { params: Promise<{ id: s
                   )}
                   Approve Booking
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="flex-1 h-12 text-destructive border-destructive/20 hover:bg-destructive/10"
                   onClick={handleReject}
                   disabled={isProcessing}
@@ -222,6 +226,7 @@ export default function BookingDetailsPage({ params }: { params: Promise<{ id: s
                 </Button>
               </div>
             )}
+
           </div>
 
           <div className="space-y-6">
@@ -257,28 +262,62 @@ export default function BookingDetailsPage({ params }: { params: Promise<{ id: s
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-start gap-3">
-                  <div className="mt-1 h-2 w-2 rounded-full bg-primary" />
+                  <div className="mt-1 h-2 w-2 rounded-full bg-primary flex-shrink-0" />
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground uppercase">Created</p>
+                    <p className="text-xs font-medium text-muted-foreground uppercase">Requested</p>
                     <p className="text-xs">{format(new Date(booking.createdAt), "MMM d, yyyy h:mm a")}</p>
                   </div>
                 </div>
-                {booking.status !== "pending" && (
+                {booking.confirmedAt && (
                   <div className="flex items-start gap-3">
-                    <div className={`mt-1 h-2 w-2 rounded-full ${booking.status === "confirmed" ? "bg-success" : "bg-destructive"}`} />
+                    <div className="mt-1 h-2 w-2 rounded-full bg-success flex-shrink-0" />
                     <div>
-                      <p className="text-xs font-medium text-muted-foreground uppercase">
-                        {booking.status === "confirmed" ? "Confirmed" : "Cancelled"}
-                      </p>
-                      {/* We don't have updatedAt in the UI currently, but we could add it if needed */}
+                      <p className="text-xs font-medium text-muted-foreground uppercase">Confirmed</p>
+                      <p className="text-xs">{format(new Date(booking.confirmedAt), "MMM d, yyyy h:mm a")}</p>
+                    </div>
+                  </div>
+                )}
+                {booking.rescheduledAt && (
+                  <div className="flex items-start gap-3">
+                    <div className="mt-1 h-2 w-2 rounded-full bg-primary flex-shrink-0" />
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground uppercase">Rescheduled</p>
+                      <p className="text-xs">{format(new Date(booking.rescheduledAt), "MMM d, yyyy h:mm a")}</p>
+                    </div>
+                  </div>
+                )}
+                {booking.status === "cancelled" && (
+                  <div className="flex items-start gap-3">
+                    <div className="mt-1 h-2 w-2 rounded-full bg-destructive flex-shrink-0" />
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground uppercase">Cancelled</p>
+                      <p className="text-xs">{format(new Date(booking.updatedAt), "MMM d, yyyy h:mm a")}</p>
                     </div>
                   </div>
                 )}
               </CardContent>
             </Card>
+
+            {booking.status !== "cancelled" && !isPast(new Date(booking.startTime)) && (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setRescheduleOpen(true)}
+              >
+                <Calendar className="mr-2 h-4 w-4" />
+                Reschedule Booking
+              </Button>
+            )}
           </div>
         </div>
       </div>
+      {booking && (
+        <RescheduleDialog
+          booking={booking}
+          open={rescheduleOpen}
+          onOpenChange={setRescheduleOpen}
+        />
+      )}
     </DashboardLayout>
   );
 }

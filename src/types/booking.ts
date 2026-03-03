@@ -11,6 +11,8 @@ export interface Booking {
   notes: string | null;
   meetingLink: string | null;
   googleEventId: string | null;
+  confirmedAt: string | null;
+  rescheduledAt: string | null;
   createdAt: string;
   updatedAt: string;
   eventType?: {
@@ -36,6 +38,10 @@ export interface CreateBookingRequest {
 export interface UpdateBookingRequest {
   status?: BookingStatus;
   notes?: string;
+}
+
+export interface RescheduleBookingRequest {
+  startTime: string; // ISO 8601
 }
 
 export interface AvailableSlotsResponse {

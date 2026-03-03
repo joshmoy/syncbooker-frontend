@@ -3,6 +3,7 @@ import axios from "axios";
 import {
   CreateBookingRequest,
   UpdateBookingRequest,
+  RescheduleBookingRequest,
   Booking,
   AvailableSlot,
   AvailableSlotsResponse,
@@ -136,5 +137,19 @@ export const bookingsService = {
       message: string;
     }>(`/bookings/${id}`);
     return response.data;
+  },
+
+  /**
+   * PROTECTED: Reschedule a booking to a new start time
+   */
+  async rescheduleBooking(
+    id: string,
+    data: RescheduleBookingRequest
+  ): Promise<Booking> {
+    const response = await apiInstance.patch<BookingResponse>(
+      `/bookings/${id}/reschedule`,
+      data
+    );
+    return response.data.booking;
   },
 };

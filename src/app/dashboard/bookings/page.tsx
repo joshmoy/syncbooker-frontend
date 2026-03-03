@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useBookings, useApproveBooking, useRejectBooking, useDeleteBooking } from "@/hooks/use-bookings";
 import type { Booking } from "@/types/booking";
+import { RescheduleDialog } from "@/components/dashboard/reschedule-dialog";
 import Link from "next/link";
 import { format, isPast } from "date-fns";
 
@@ -36,6 +37,8 @@ export default function BookingsPage() {
   const deleteBooking = useDeleteBooking();
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [bookingToCancel, setBookingToCancel] = useState<string | null>(null);
+  const [rescheduleDialogOpen, setRescheduleDialogOpen] = useState(false);
+  const [bookingToReschedule, setBookingToReschedule] = useState<Booking | null>(null);
 
   const handleApprove = (id: string) => {
     approveBooking.mutate(id);
@@ -48,6 +51,11 @@ export default function BookingsPage() {
   const handleCancelClick = (id: string) => {
     setBookingToCancel(id);
     setCancelDialogOpen(true);
+  };
+
+  const handleRescheduleClick = (booking: Booking) => {
+    setBookingToReschedule(booking);
+    setRescheduleDialogOpen(true);
   };
 
   const handleCancelConfirm = () => {
@@ -130,6 +138,7 @@ export default function BookingsPage() {
                     onCancel={handleCancelClick}
                     onApprove={handleApprove}
                     onReject={handleReject}
+                    onReschedule={handleRescheduleClick}
                     isProcessing={approveBooking.isPending || rejectBooking.isPending}
                   />
                 ))
@@ -153,6 +162,7 @@ export default function BookingsPage() {
                     onCancel={handleCancelClick}
                     onApprove={handleApprove}
                     onReject={handleReject}
+                    onReschedule={handleRescheduleClick}
                     isProcessing={approveBooking.isPending || rejectBooking.isPending}
                   />
                 ))
@@ -176,6 +186,7 @@ export default function BookingsPage() {
                     onCancel={handleCancelClick}
                     onApprove={handleApprove}
                     onReject={handleReject}
+                    onReschedule={handleRescheduleClick}
                     isProcessing={approveBooking.isPending || rejectBooking.isPending}
                   />
                 ))
@@ -198,6 +209,7 @@ export default function BookingsPage() {
                   onCancel={handleCancelClick}
                   onApprove={handleApprove}
                   onReject={handleReject}
+                  onReschedule={handleRescheduleClick}
                   isProcessing={approveBooking.isPending || rejectBooking.isPending}
                 />
               ))}
@@ -217,6 +229,17 @@ export default function BookingsPage() {
           </Card>
         )}
       </div>
+
+      {bookingToReschedule && (
+        <RescheduleDialog
+          booking={bookingToReschedule}
+          open={rescheduleDialogOpen}
+          onOpenChange={(open) => {
+            setRescheduleDialogOpen(open);
+            if (!open) setBookingToReschedule(null);
+          }}
+        />
+      )}
 
       <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
         <AlertDialogContent>
@@ -247,12 +270,14 @@ function BookingCard({
   onCancel,
   onApprove,
   onReject,
+  onReschedule,
   isProcessing,
 }: {
   booking: Booking;
   onCancel: (id: string) => void;
   onApprove: (id: string) => void;
   onReject: (id: string) => void;
+  onReschedule: (booking: Booking) => void;
   isProcessing: boolean;
 }) {
   const startDate = new Date(booking.startTime);
@@ -317,6 +342,9 @@ function BookingCard({
                         <Link href={`/dashboard/bookings/${booking.id}`}>
                           View Details
                         </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onReschedule(booking)}>
+                        Reschedule
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-destructive"

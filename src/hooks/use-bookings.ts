@@ -195,6 +195,31 @@ export function useRejectBooking() {
 }
 
 /**
+ * Hook to reschedule a booking (protected)
+ */
+export function useRescheduleBooking() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, startTime }: { id: string; startTime: string }) =>
+      bookingsService.rescheduleBooking(id, { startTime }),
+    onSuccess: (booking) => {
+      queryClient.invalidateQueries({ queryKey: bookingKeys.list() });
+      queryClient.invalidateQueries({ queryKey: bookingKeys.detail(booking.id) });
+      toast.success("Booking rescheduled successfully!");
+    },
+    onError: (error: any) => {
+      const message =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to reschedule booking.";
+      toast.error(message);
+    },
+  });
+}
+
+/**
  * Hook to generate meeting link for a booking (protected)
  */
 export function useGenerateMeetingLink() {
