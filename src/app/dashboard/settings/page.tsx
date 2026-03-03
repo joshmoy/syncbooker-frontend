@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Camera, Upload, X, Loader2, Calendar, CheckCircle2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
@@ -231,11 +232,36 @@ export default function SettingsPage() {
   if (settingsLoading) {
     return (
       <DashboardLayout>
-        <div className="flex min-h-[400px] items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="body-sm text-muted-foreground">Loading settings...</p>
+        <div className="space-y-8">
+          <div>
+            <Skeleton className="h-8 w-32" />
+            <Skeleton className="h-4 w-64 mt-2" />
           </div>
+          {/* Tab bar */}
+          <div className="flex gap-2">
+            {[...Array(3)].map((_, i) => (
+              <Skeleton key={i} className="h-9 w-24 rounded-md" />
+            ))}
+          </div>
+          {/* Profile card skeleton */}
+          <Card>
+            <CardHeader><Skeleton className="h-5 w-40" /></CardHeader>
+            <CardContent className="space-y-6">
+              {/* Avatar */}
+              <div className="flex items-center gap-4">
+                <Skeleton className="h-20 w-20 rounded-full" />
+                <Skeleton className="h-9 w-32 rounded-md" />
+              </div>
+              {/* Fields */}
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-10 w-full rounded-md" />
+                </div>
+              ))}
+              <Skeleton className="h-10 w-28 rounded-md" />
+            </CardContent>
+          </Card>
         </div>
       </DashboardLayout>
     );
