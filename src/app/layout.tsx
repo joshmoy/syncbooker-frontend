@@ -9,7 +9,10 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "SyncBooker - Simple Scheduling Made Easy",
+  title: {
+    template: "%s | SyncBooker",
+    default: "SyncBooker - Simple Scheduling Made Easy",
+  },
   description: "A minimalistic scheduling platform for managing your availability and bookings",
   icons: {
     icon: "/favicon/favicon.ico",
