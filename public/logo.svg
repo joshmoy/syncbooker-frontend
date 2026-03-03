@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 90" width="400" height="90">
+  <text x="0" y="72"
+    font-family="'Helvetica Neue', Helvetica, Arial, sans-serif"
+    font-size="58"
+    letter-spacing="-2.5"
+    fill="#0D1F3C">
+    <tspan font-weight="300">sync</tspan><tspan font-weight="700" fill="#1867C7">Booker</tspan>
+  </text>
+</svg>

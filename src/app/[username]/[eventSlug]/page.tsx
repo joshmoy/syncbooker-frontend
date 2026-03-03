@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, use, useMemo } from "react";
+import Image from "next/image";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -109,8 +110,13 @@ export default function BookingPage({
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <CalendarIcon className="h-6 w-6" />
-              <span className="heading-sm">SyncBooker</span>
+              <Image
+                src="/logo.svg"
+                alt="SyncBooker"
+                width={28}
+                height={28}
+                className="w-full max-w-[180px] h-auto"
+              />
             </Link>
           </div>
         </div>

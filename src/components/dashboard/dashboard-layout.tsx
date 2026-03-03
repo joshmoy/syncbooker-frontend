@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -13,12 +14,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Calendar,
   Clock,
   LayoutDashboard,
   Settings,
   LogOut,
   Link as LinkIcon,
+  Calendar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth";
@@ -60,9 +61,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       <aside className="fixed inset-y-0 left-0 z-50 w-64 border-r border-border bg-card">
         <div className="flex h-full flex-col">
           {/* Logo */}
-          <div className="flex h-16 items-center gap-2 border-b border-border px-6">
-            <Calendar className="h-6 w-6" />
-            <span className="heading-sm">SyncBooker</span>
+          <div className="flex h-16 items-center border-b border-border px-6">
+            <Image src="/logo.svg" alt="SyncBooker" width={180} height={48} className="w-full max-w-[180px] h-auto" />
           </div>
 
           {/* Navigation */}

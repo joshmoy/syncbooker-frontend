@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, Users, Zap } from "lucide-react";
 
@@ -10,8 +11,13 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-2">
-              <Calendar className="h-6 w-6" />
-              <span className="heading-sm">SyncBooker</span>
+              <Image
+                src="/logo.svg"
+                alt="SyncBooker"
+                width={28}
+                height={28}
+                className="w-full max-w-[180px] h-auto"
+              />
             </div>
             <nav className="flex items-center gap-4">
               <Link href="/login">
@@ -36,8 +42,8 @@ export default function Home() {
             Made Easy
           </h1>
           <p className="body-lg mx-auto mb-10 max-w-2xl text-muted-foreground">
-            Share your availability, let others book time with you. No back and
-            forth emails. Just simple, elegant scheduling.
+            Share your availability, let others book time with you. No back and forth emails. Just
+            simple, elegant scheduling.
           </p>
           <div className="flex items-center justify-center gap-4">
             <Link href="/signup">
@@ -64,8 +70,7 @@ export default function Home() {
               </div>
               <h3 className="heading-sm">Easy Availability</h3>
               <p className="body-sm text-muted-foreground">
-                Set your available hours once and let others find time that
-                works for both of you.
+                Set your available hours once and let others find time that works for both of you.
               </p>
             </div>
 
@@ -75,8 +80,7 @@ export default function Home() {
               </div>
               <h3 className="heading-sm">Time Zone Smart</h3>
               <p className="body-sm text-muted-foreground">
-                Automatically handles time zones so you never have to do the
-                math.
+                Automatically handles time zones so you never have to do the math.
               </p>
             </div>
 
@@ -86,8 +90,7 @@ export default function Home() {
               </div>
               <h3 className="heading-sm">Multiple Events</h3>
               <p className="body-sm text-muted-foreground">
-                Create different event types with custom durations and
-                descriptions.
+                Create different event types with custom durations and descriptions.
               </p>
             </div>
 
@@ -97,8 +100,7 @@ export default function Home() {
               </div>
               <h3 className="heading-sm">Instant Booking</h3>
               <p className="body-sm text-muted-foreground">
-                Share your link and get booked instantly. Confirmations sent
-                automatically.
+                Share your link and get booked instantly. Confirmations sent automatically.
               </p>
             </div>
           </div>
@@ -125,12 +127,10 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <div className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
+              <Image src="/logo.svg" alt="SyncBooker" width={20} height={20} />
               <span className="label-md">SyncBooker</span>
             </div>
-            <p className="body-sm text-muted-foreground">
-              © 2024 SyncBooker. All rights reserved.
-            </p>
+            <p className="body-sm text-muted-foreground">© 2024 SyncBooker. All rights reserved.</p>
           </div>
         </div>
       </footer>
