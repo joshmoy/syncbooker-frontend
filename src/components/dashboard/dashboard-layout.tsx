@@ -26,7 +26,7 @@ import { useLogout } from "@/hooks/use-auth";
 import { useEffect, useState } from "react";
 
 const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, exact: true },
   { name: "Event Types", href: "/dashboard/events", icon: Calendar },
   { name: "Availability", href: "/dashboard/availability", icon: Clock },
   { name: "Bookings", href: "/dashboard/bookings", icon: LinkIcon },
@@ -68,7 +68,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           {/* Navigation */}
           <nav className="flex-1 space-y-1 p-4">
             {navigation.map((item) => {
-              const isActive = pathname === item.href;
+              const isActive = item.exact
+                ? pathname === item.href
+                : pathname === item.href || pathname.startsWith(item.href + "/");
               return (
                 <Link key={item.name} href={item.href}>
                   <Button

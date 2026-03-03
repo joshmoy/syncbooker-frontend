@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Camera, Upload, X, Loader2, Calendar } from "lucide-react";
+import { Camera, Upload, X, Loader2, Calendar, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
@@ -502,20 +502,28 @@ export default function SettingsPage() {
                       <Calendar className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <h4 className="font-medium">Google Calendar</h4>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-medium">Google Calendar</h4>
+                        {settings?.user.googleConnected && (
+                          <span className="flex items-center gap-1 text-xs font-medium text-green-600">
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            Connected
+                          </span>
+                        )}
+                      </div>
                       <p className="body-sm text-muted-foreground">
                         Sync your bookings and create Google Meet links automatically.
                       </p>
                     </div>
                   </div>
                   <Button
-                    variant={settings?.user.googleRefreshToken ? "outline" : "default"}
+                    variant={settings?.user.googleConnected ? "outline" : "default"}
                     onClick={handleConnectGoogle}
-                    disabled={isConnectingGoogle}
+                    disabled={isConnectingGoogle || !!settings?.user.googleConnected}
                   >
                     {isConnectingGoogle ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : settings?.user.googleRefreshToken ? (
+                    ) : settings?.user.googleConnected ? (
                       "Connected"
                     ) : (
                       "Connect"

@@ -5,6 +5,7 @@ export interface UserSettings {
   username: string;
   displayPicture: string | null;
   banner: string | null;
+  googleConnected: boolean;
   createdAt: string;
   updatedAt: string;
 }
