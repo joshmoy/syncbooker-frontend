@@ -12,9 +12,8 @@ import { Calendar as CalendarIcon, Clock, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { usePublicEventType } from "@/hooks/use-event-types";
 import { useTrackVisitor } from "@/hooks/use-visitor";
-import { useAvailableSlots, usePublicBookings, useCreatePublicBooking } from "@/hooks/use-bookings";
+import { useAvailableSlots, useCreatePublicBooking } from "@/hooks/use-bookings";
 import { format, isSameDay } from "date-fns";
-import { generateSlotsFromBackendResponse } from "@/lib/slot-generator";
 
 export default function BookingPage({
   params,
@@ -38,34 +37,17 @@ export default function BookingPage({
 
   const createBooking = useCreatePublicBooking();
 
-  // Fetch backend slots (these show one slot per day as samples)
   const {
     data: backendSlots,
     isLoading: slotsLoading,
     error: slotsError,
   } = useAvailableSlots(eventSlug);
 
-  // Fetch existing bookings to filter out booked slots
-  const { data: existingBookings } = usePublicBookings(eventSlug);
-
-  // Generate all slots for the selected date based on backend response
+  // Filter the backend's pre-computed slots to those matching the selected date
   const slots = useMemo(() => {
-    if (!date || !eventType || !backendSlots) {
-      return [];
-    }
-
-    // Filter bookings for the selected date
-    const dateBookings =
-      existingBookings?.filter((booking) => isSameDay(new Date(booking.startTime), date)) || [];
-
-    // Generate all slots from backend's sample slots
-    return generateSlotsFromBackendResponse(
-      backendSlots,
-      date,
-      eventType.durationMinutes,
-      dateBookings,
-    );
-  }, [date, eventType, backendSlots, existingBookings]);
+    if (!date || !backendSlots) return [];
+    return backendSlots.filter((slot) => isSameDay(new Date(slot.startTime), date));
+  }, [date, backendSlots]);
 
   const handleConfirm = () => {
     if (!selectedTime || !eventType) return;
