@@ -20,6 +20,7 @@ import {
   LogOut,
   Link as LinkIcon,
   Calendar,
+  AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth";
@@ -132,6 +133,17 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
       {/* Main Content */}
       <main className="flex-1 pl-64">
+        {isClient && user && user.emailVerified === false && (
+          <div className="flex items-center gap-3 bg-amber-50 border-b border-amber-200 px-8 py-3 text-amber-800">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            <p className="body-sm">
+              Please verify your email address. Check your inbox for a verification link.{" "}
+              <Link href="/verify-email" className="font-medium underline underline-offset-2">
+                Resend email
+              </Link>
+            </p>
+          </div>
+        )}
         <div className="mx-auto max-w-7xl p-8">{children}</div>
       </main>
     </div>

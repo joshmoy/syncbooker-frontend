@@ -5,6 +5,7 @@ export interface User {
   username?: string;
   displayPicture?: string | null;
   banner?: string | null;
+  emailVerified?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
