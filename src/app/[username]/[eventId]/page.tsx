@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Calendar as CalendarIcon, Clock, Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { usePublicEventType } from "@/hooks/use-event-types";
 import { useTrackVisitor } from "@/hooks/use-visitor";
@@ -76,10 +77,37 @@ export default function BookingPage({
 
   if (eventLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-muted/30">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="body-sm text-muted-foreground">Loading event details...</p>
+      <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4">
+        <div className="w-full max-w-4xl">
+          {/* Header */}
+          <div className="flex justify-center mb-8">
+            <Skeleton className="h-10 w-36" />
+          </div>
+          <div className="grid md:grid-cols-[1fr_1.5fr] gap-0 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+            {/* Left panel */}
+            <div className="p-8 border-r border-border space-y-6">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-12 w-12 rounded-full" />
+                <Skeleton className="h-5 w-28" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-7 w-48" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-4 w-4 rounded" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+              </div>
+            </div>
+            {/* Right panel */}
+            <div className="p-8 space-y-6">
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-[280px] w-full rounded-lg" />
+            </div>
+          </div>
         </div>
       </div>
     );
