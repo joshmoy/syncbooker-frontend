@@ -130,7 +130,15 @@ export default function Home() {
               <Image src="/logo.svg" alt="SyncBooker" width={20} height={20} />
               <span className="label-md">SyncBooker</span>
             </div>
-            <p className="body-sm text-muted-foreground">© 2024 SyncBooker. All rights reserved.</p>
+            <div className="flex items-center gap-6">
+              <Link href="/privacy-policy" className="body-sm text-muted-foreground hover:text-foreground transition-colors">
+                Privacy Policy
+              </Link>
+              <Link href="/terms-of-use" className="body-sm text-muted-foreground hover:text-foreground transition-colors">
+                Terms of Use
+              </Link>
+              <p className="body-sm text-muted-foreground">© 2026 SyncBooker. All rights reserved.</p>
+            </div>
           </div>
         </div>
       </footer>
