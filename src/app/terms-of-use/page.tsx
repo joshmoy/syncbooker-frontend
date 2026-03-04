@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Terms of Use" };
 
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://syncbooker.com";
+const appHost = new URL(appUrl).hostname;
+
 export default function TermsOfUsePage() {
   return (
     <div className="min-h-screen bg-background">
@@ -63,8 +66,8 @@ export default function TermsOfUsePage() {
               <li>You must provide accurate and complete information when creating your account.</li>
               <li>You may not use another person&apos;s account without permission.</li>
               <li>You must notify us immediately of any unauthorised use of your account at{" "}
-                <a href="mailto:support@syncbooker.com" className="text-primary underline underline-offset-2">
-                  support@syncbooker.com
+                <a href={`mailto:support@${appHost}`} className="text-primary underline underline-offset-2">
+                  support@{appHost}
                 </a>.
               </li>
             </ul>
@@ -168,8 +171,8 @@ export default function TermsOfUsePage() {
           <Section title="12. Contact Us">
             <p className="body-md text-muted-foreground">
               If you have questions about these Terms, please contact us at{" "}
-              <a href="mailto:legal@syncbooker.com" className="text-primary underline underline-offset-2">
-                legal@syncbooker.com
+              <a href={`mailto:legal@${appHost}`} className="text-primary underline underline-offset-2">
+                legal@{appHost}
               </a>.
             </p>
           </Section>

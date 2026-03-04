@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Privacy Policy" };
 
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://syncbooker.com";
+const appHost = new URL(appUrl).hostname;
+
 export default function PrivacyPolicyPage() {
   return (
     <div className="min-h-screen bg-background">
@@ -44,7 +47,7 @@ export default function PrivacyPolicyPage() {
           <p className="body-md text-muted-foreground">
             SyncBooker (&quot;we&quot;, &quot;our&quot;, or &quot;us&quot;) is committed to protecting your
             privacy. This Privacy Policy explains how we collect, use, and share information about you
-            when you use our scheduling service at syncbooker.com (the &quot;Service&quot;).
+            when you use our scheduling service at {appHost} (the &quot;Service&quot;).
           </p>
 
           <Section title="1. Information We Collect">
@@ -116,8 +119,8 @@ export default function PrivacyPolicyPage() {
             </ul>
             <p className="body-md text-muted-foreground mt-4">
               To exercise any of these rights, please contact us at{" "}
-              <a href="mailto:privacy@syncbooker.com" className="text-primary underline underline-offset-2">
-                privacy@syncbooker.com
+              <a href={`mailto:privacy@${appHost}`} className="text-primary underline underline-offset-2">
+                privacy@{appHost}
               </a>.
             </p>
           </Section>
@@ -149,8 +152,8 @@ export default function PrivacyPolicyPage() {
           <Section title="10. Contact Us">
             <p className="body-md text-muted-foreground">
               If you have questions about this Privacy Policy, please contact us at{" "}
-              <a href="mailto:privacy@syncbooker.com" className="text-primary underline underline-offset-2">
-                privacy@syncbooker.com
+              <a href={`mailto:privacy@${appHost}`} className="text-primary underline underline-offset-2">
+                privacy@{appHost}
               </a>.
             </p>
           </Section>
