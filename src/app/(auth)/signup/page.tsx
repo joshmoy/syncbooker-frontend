@@ -5,7 +5,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar } from "lucide-react";
 import { useRegister } from "@/hooks/use-auth";
 
 export default function SignupPage() {
@@ -31,20 +30,15 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <Calendar className="h-8 w-8" />
-            <span className="heading-md">SyncBooker</span>
-          </Link>
-          <h1 className="heading-lg mt-6">Create your account</h1>
-          <p className="body-md mt-2 text-muted-foreground">
-            Start scheduling in minutes
-          </p>
-        </div>
+    <div className="space-y-8">
+      <div className="text-center">
+        <h1 className="heading-lg">Create your account</h1>
+        <p className="body-md mt-2 text-muted-foreground">
+          Start scheduling in minutes
+        </p>
+      </div>
 
-        <div className="rounded-lg border border-border bg-card p-8">
+      <div className="rounded-lg border border-border bg-card p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
@@ -104,7 +98,6 @@ export default function SignupPage() {
               </Link>
             </p>
           </div>
-        </div>
       </div>
     </div>
   );

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar, ArrowLeft, Lock, Loader2 } from "lucide-react";
+import { ArrowLeft, Lock, Loader2 } from "lucide-react";
 import { useResetPassword } from "@/hooks/use-auth";
 import { toast } from "sonner";
 
@@ -47,13 +47,9 @@ function ResetPasswordForm() {
   };
 
   return (
-    <div className="w-full max-w-md space-y-8">
+    <div className="space-y-8">
       <div className="text-center">
-        <Link href="/" className="inline-flex items-center gap-2">
-          <Calendar className="h-8 w-8" />
-          <span className="heading-md">SyncBooker</span>
-        </Link>
-        <h1 className="heading-lg mt-6">Set new password</h1>
+        <h1 className="heading-lg">Set new password</h1>
         <p className="body-md mt-2 text-muted-foreground">
           Your new password must be different from previous used passwords.
         </p>
@@ -118,17 +114,15 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4">
-      <Suspense
-        fallback={
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="body-sm text-muted-foreground">Loading...</p>
-          </div>
-        }
-      >
-        <ResetPasswordForm />
-      </Suspense>
-    </div>
+    <Suspense
+      fallback={
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="body-sm text-muted-foreground">Loading...</p>
+        </div>
+      }
+    >
+      <ResetPasswordForm />
+    </Suspense>
   );
 }

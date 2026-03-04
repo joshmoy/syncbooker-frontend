@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle2, XCircle, Loader2, Mail } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 import axios from "axios";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000/api";
@@ -135,31 +134,16 @@ function VerifyEmailContent() {
 
 export default function VerifyEmailPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4">
-      <div className="w-full max-w-md space-y-6">
-        <div className="flex justify-center">
-          <Link href="/">
-            <Image
-              src="/logo.svg"
-              alt="SyncBooker"
-              width={140}
-              height={40}
-              className="w-full max-w-[180px] h-auto"
-            />
-          </Link>
-        </div>
-        <Suspense
-          fallback={
-            <Card>
-              <CardContent className="p-8 flex justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </CardContent>
-            </Card>
-          }
-        >
-          <VerifyEmailContent />
-        </Suspense>
-      </div>
-    </div>
+    <Suspense
+      fallback={
+        <Card>
+          <CardContent className="p-8 flex justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </CardContent>
+        </Card>
+      }
+    >
+      <VerifyEmailContent />
+    </Suspense>
   );
 }
