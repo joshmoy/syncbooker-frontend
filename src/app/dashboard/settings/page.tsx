@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,17 @@ import {
   useRemoveBanner,
 } from "@/hooks/use-settings";
 
+// Reads search params inside a Suspense boundary to satisfy Next.js SSR rules
+function GoogleConnectedNotifier() {
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    if (searchParams.get("google_connected") === "true") {
+      toast.success("Google Calendar connected successfully!");
+    }
+  }, [searchParams]);
+  return null;
+}
+
 export default function SettingsPage() {
   const { data: settings, isLoading: settingsLoading } = useSettings();
   const updateSettings = useUpdateSettings();
@@ -31,9 +42,13 @@ export default function SettingsPage() {
   const removeDisplayPicture = useRemoveDisplayPicture();
   const removeBanner = useRemoveBanner();
 
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
+  // undefined = not yet edited by user; falls back to server value
+  const [nameDraft, setNameDraft] = useState<string | undefined>(undefined);
+  const [emailDraft, setEmailDraft] = useState<string | undefined>(undefined);
+  const [usernameDraft, setUsernameDraft] = useState<string | undefined>(undefined);
+  const name = nameDraft ?? settings?.user?.name ?? "";
+  const email = emailDraft ?? settings?.user?.email ?? "";
+  const username = usernameDraft ?? settings?.user?.username ?? "";
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -45,24 +60,7 @@ export default function SettingsPage() {
 
   const profileInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
-  const searchParams = useSearchParams();
   const [isConnectingGoogle, setIsConnectingGoogle] = useState(false);
-
-  // Load user settings on mount
-  useEffect(() => {
-    if (settings?.user) {
-      setName(settings.user.name || "");
-      setEmail(settings.user.email || "");
-      setUsername(settings.user.username || "");
-    }
-  }, [settings]);
-
-  // Check for google_connected param
-  useEffect(() => {
-    if (searchParams.get("google_connected") === "true") {
-      toast.success("Google Calendar connected successfully!");
-    }
-  }, [searchParams]);
 
   const handleConnectGoogle = async () => {
     try {
@@ -269,6 +267,9 @@ export default function SettingsPage() {
 
   return (
     <DashboardLayout>
+      <Suspense fallback={null}>
+        <GoogleConnectedNotifier />
+      </Suspense>
       <div className="space-y-8">
         <div>
           <h1 className="heading-lg">Settings</h1>
@@ -429,7 +430,7 @@ export default function SettingsPage() {
                   <Input
                     id="name"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={(e) => setNameDraft(e.target.value)}
                   />
                 </div>
 
@@ -442,7 +443,7 @@ export default function SettingsPage() {
                     <Input
                       id="username"
                       value={username}
-                      onChange={(e) => setUsername(e.target.value)}
+                      onChange={(e) => setUsernameDraft(e.target.value)}
                       className="flex-1"
                     />
                   </div>

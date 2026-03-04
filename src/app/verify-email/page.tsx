@@ -140,7 +140,13 @@ export default function VerifyEmailPage() {
       <div className="w-full max-w-md space-y-6">
         <div className="flex justify-center">
           <Link href="/">
-            <Image src="/logo.svg" alt="SyncBooker" width={140} height={40} className="h-auto" />
+            <Image
+              src="/logo.svg"
+              alt="SyncBooker"
+              width={140}
+              height={40}
+              className="w-full max-w-[180px] h-auto"
+            />
           </Link>
         </div>
         <Suspense
