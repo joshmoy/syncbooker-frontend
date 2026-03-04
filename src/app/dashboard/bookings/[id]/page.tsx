@@ -33,6 +33,7 @@ export default function BookingDetailsPage({ params }: { params: Promise<{ id: s
   const approveBooking = useApproveBooking();
   const rejectBooking = useRejectBooking();
   const generateMeetingLink = useGenerateMeetingLink();
+  const [rescheduleOpen, setRescheduleOpen] = useState(false);
 
   const handleApprove = () => {
     approveBooking.mutate(id);
@@ -152,8 +153,6 @@ export default function BookingDetailsPage({ params }: { params: Promise<{ id: s
         return <Badge variant="outline">{status}</Badge>;
     }
   };
-
-  const [rescheduleOpen, setRescheduleOpen] = useState(false);
 
   const isProcessing = approveBooking.isPending || rejectBooking.isPending;
 
