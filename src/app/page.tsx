@@ -127,17 +127,30 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <div className="flex items-center gap-2">
-              <Image src="/logo.svg" alt="SyncBooker" width={20} height={20} />
-              <span className="label-md">SyncBooker</span>
+              <Image
+                src="/logo.svg"
+                alt="SyncBooker"
+                width={20}
+                height={20}
+                className="w-full max-w-[180px] h-auto"
+              />
             </div>
             <div className="flex items-center gap-6">
-              <Link href="/privacy-policy" className="body-sm text-muted-foreground hover:text-foreground transition-colors">
+              <Link
+                href="/privacy-policy"
+                className="body-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
                 Privacy Policy
               </Link>
-              <Link href="/terms-of-use" className="body-sm text-muted-foreground hover:text-foreground transition-colors">
+              <Link
+                href="/terms-of-use"
+                className="body-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
                 Terms of Use
               </Link>
-              <p className="body-sm text-muted-foreground">© 2026 SyncBooker. All rights reserved.</p>
+              <p className="body-sm text-muted-foreground">
+                © 2026 SyncBooker. All rights reserved.
+              </p>
             </div>
           </div>
         </div>

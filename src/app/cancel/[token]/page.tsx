@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import axios from "axios";
+import axios, { type AxiosError } from "axios";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000/api";
 
@@ -25,10 +25,11 @@ export default function CancelBookingPage({
       const res = await axios.post(`${API_BASE}/public/cancel/${token}`);
       setMessage(res.data.message || "Your booking has been cancelled.");
       setStatus("success");
-    } catch (err: any) {
+    } catch (err) {
+      const axiosErr = err as AxiosError<{ error?: string; message?: string }>;
       setMessage(
-        err.response?.data?.error ||
-        err.response?.data?.message ||
+        axiosErr.response?.data?.error ||
+        axiosErr.response?.data?.message ||
         "This cancellation link is invalid or has already been used."
       );
       setStatus("error");
@@ -40,7 +41,13 @@ export default function CancelBookingPage({
       <div className="w-full max-w-md space-y-6">
         <div className="flex justify-center">
           <Link href="/">
-            <Image src="/logo.svg" alt="SyncBooker" width={140} height={40} className="h-auto" />
+            <Image
+              src="/logo.svg"
+              alt="SyncBooker"
+              width={140}
+              height={40}
+              className="w-full max-w-[180px] h-auto"
+            />
           </Link>
         </div>
 
@@ -59,11 +66,7 @@ export default function CancelBookingPage({
                     Are you sure you want to cancel this booking? This action cannot be undone.
                   </p>
                 </div>
-                <Button
-                  variant="destructive"
-                  className="w-full"
-                  onClick={handleCancel}
-                >
+                <Button variant="destructive" className="w-full" onClick={handleCancel}>
                   Yes, Cancel My Booking
                 </Button>
                 <Link href="/">
@@ -93,7 +96,9 @@ export default function CancelBookingPage({
                   <p className="body-md text-muted-foreground">{message}</p>
                 </div>
                 <Link href="/">
-                  <Button variant="outline" className="w-full">Back to Home</Button>
+                  <Button variant="outline" className="w-full">
+                    Back to Home
+                  </Button>
                 </Link>
               </>
             )}
@@ -110,7 +115,9 @@ export default function CancelBookingPage({
                   <p className="body-md text-muted-foreground">{message}</p>
                 </div>
                 <Link href="/">
-                  <Button variant="outline" className="w-full">Back to Home</Button>
+                  <Button variant="outline" className="w-full">
+                    Back to Home
+                  </Button>
                 </Link>
               </>
             )}

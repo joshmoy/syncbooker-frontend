@@ -14,16 +14,15 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000/
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
-  const [status, setStatus] = useState<"loading" | "success" | "error" | "no-token">("loading");
+  const [status, setStatus] = useState<"loading" | "success" | "error" | "no-token">(
+    () => (token ? "loading" : "no-token")
+  );
   const [message, setMessage] = useState("");
   const [resendEmail, setResendEmail] = useState("");
   const [resendStatus, setResendStatus] = useState<"idle" | "loading" | "done">("idle");
 
   useEffect(() => {
-    if (!token) {
-      setStatus("no-token");
-      return;
-    }
+    if (!token) return;
     axios
       .get(`${API_BASE}/auth/verify-email?token=${token}`)
       .then((res) => {
