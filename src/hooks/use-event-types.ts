@@ -51,7 +51,7 @@ export function usePublicEventType(id: string) {
 /**
  * Hook to create a new event type
  */
-export function useCreateEventType() {
+export function useCreateEventType(redirectTo = "/dashboard/events") {
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -62,7 +62,7 @@ export function useCreateEventType() {
       // Invalidate and refetch event types list
       queryClient.invalidateQueries({ queryKey: eventTypeKeys.list() });
       toast.success(response.message || "Event type created successfully!");
-      router.push("/dashboard/events");
+      router.push(redirectTo);
     },
     onError: (error: any) => {
       const message =

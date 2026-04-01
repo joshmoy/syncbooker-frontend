@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -101,8 +102,11 @@ const validateDaySlots = (
 };
 
 export default function AvailabilityPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: availabilities, isLoading } = useAvailabilities();
   const replaceAvailabilities = useReplaceAvailabilities();
+  const isOnboardingFlow = searchParams.get("onboarding") === "1";
 
   // Local edits — null means the user hasn't changed anything yet
   const [edits, setEdits] = useState<DayAvailability[] | null>(null);
@@ -238,7 +242,13 @@ export default function AvailabilityPage() {
       );
 
     replaceAvailabilities.mutate(slots, {
-      onSuccess: () => setEdits(null),
+      onSuccess: () => {
+        setEdits(null);
+
+        if (isOnboardingFlow) {
+          router.push("/dashboard/onboarding");
+        }
+      },
     });
   };
 

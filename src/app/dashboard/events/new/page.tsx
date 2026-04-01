@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,12 +33,17 @@ const colorOptions = [
 ];
 
 export default function NewEventPage() {
+  const searchParams = useSearchParams();
   const { user } = useAuthStore();
   const [title, setTitle] = useState("");
   const [duration, setDuration] = useState("30");
   const [description, setDescription] = useState("");
   const [color, setColor] = useState("#3B82F6");
-  const createEventType = useCreateEventType();
+  const isOnboardingFlow = searchParams.get("onboarding") === "1";
+  const backHref = isOnboardingFlow ? "/dashboard/onboarding" : "/dashboard/events";
+  const createEventType = useCreateEventType(
+    isOnboardingFlow ? "/dashboard/onboarding/complete" : "/dashboard/events"
+  );
 
   const getBookingLinkPreview = () => {
     const username = user?.username || user?.email?.split('@')[0] || 'your-username';
@@ -59,7 +65,7 @@ export default function NewEventPage() {
     <DashboardLayout>
       <div className="space-y-8">
         <div className="flex items-center gap-4">
-          <Link href="/dashboard/events">
+          <Link href={backHref}>
             <Button variant="ghost" size="sm">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back
@@ -153,7 +159,7 @@ export default function NewEventPage() {
                         ? "Creating..."
                         : "Create Event Type"}
                     </Button>
-                    <Link href="/dashboard/events">
+                    <Link href={backHref}>
                       <Button type="button" variant="outline">
                         Cancel
                       </Button>
