@@ -125,7 +125,7 @@ function EventTypeDetailsForm({
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        <div className="flex items-center gap-4">
+        <div className="space-y-3">
           <Link href="/dashboard/events">
             <Button variant="ghost" size="sm">
               <ArrowLeft className="mr-2 h-4 w-4" />

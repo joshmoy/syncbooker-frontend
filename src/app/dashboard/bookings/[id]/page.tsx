@@ -51,8 +51,8 @@ export default function BookingDetailsPage({ params }: { params: Promise<{ id: s
     return (
       <DashboardLayout>
         <div className="space-y-6">
-          <div className="flex items-center gap-4">
-            <Skeleton className="h-9 w-9 rounded-md" />
+          <div className="space-y-3">
+            <Skeleton className="h-9 w-24 rounded-md" />
             <Skeleton className="h-8 w-48" />
           </div>
           <div className="grid gap-6 md:grid-cols-3">
@@ -159,11 +159,14 @@ export default function BookingDetailsPage({ params }: { params: Promise<{ id: s
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()}>
-            <ArrowLeft className="h-4 w-4" />
+        <div className="space-y-3">
+          <Button variant="ghost" size="sm" onClick={() => router.back()} className="w-fit">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
           </Button>
-          <h1 className="heading-lg">Booking Details</h1>
+          <div>
+            <h1 className="heading-lg">Booking Details</h1>
+          </div>
         </div>
 
         <div className="grid gap-6 md:grid-cols-3">
