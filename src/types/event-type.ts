@@ -22,6 +22,29 @@ export interface CreateEventTypeRequest {
   color?: string;
 }
 
+export type BookingCopyTone =
+  | "professional"
+  | "friendly"
+  | "consultative"
+  | "sales"
+  | "supportive";
+
+export interface GenerateBookingCopyRequest {
+  title: string;
+  durationMinutes?: number;
+  audience?: string;
+  goal?: string;
+  tone?: BookingCopyTone;
+  additionalContext?: string;
+  existingDescription?: string;
+}
+
+export interface BookingCopySuggestion {
+  label: string;
+  title: string;
+  description: string;
+}
+
 export interface UpdateEventTypeRequest {
   title?: string;
   description?: string;
@@ -38,4 +61,10 @@ export interface EventTypeResponse {
 export interface EventTypesResponse {
   success: boolean;
   eventTypes: EventType[];
+}
+
+export interface GenerateBookingCopyResponse {
+  message: string;
+  provider: "gemini" | "template";
+  suggestions: BookingCopySuggestion[];
 }

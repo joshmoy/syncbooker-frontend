@@ -1,11 +1,27 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { eventTypesService } from "@/lib/event-types";
 import type {
+  GenerateBookingCopyRequest,
   CreateEventTypeRequest,
   UpdateEventTypeRequest,
 } from "@/types/event-type";
+
+interface ApiErrorResponse {
+  message?: string;
+  error?: string;
+}
+
+function getErrorMessage(error: AxiosError<ApiErrorResponse>) {
+  return (
+    error.response?.data?.message ||
+    error.response?.data?.error ||
+    error.message ||
+    "Something went wrong. Please try again."
+  );
+}
 
 // Query keys
 export const eventTypeKeys = {
@@ -64,12 +80,8 @@ export function useCreateEventType(redirectTo = "/dashboard/events") {
       toast.success(response.message || "Event type created successfully!");
       router.push(redirectTo);
     },
-    onError: (error: any) => {
-      const message =
-        error.response?.data?.message ||
-        error.message ||
-        "Failed to create event type. Please try again.";
-      toast.error(message);
+    onError: (error: AxiosError<ApiErrorResponse>) => {
+      toast.error(getErrorMessage(error) || "Failed to create event type. Please try again.");
     },
   });
 }
@@ -89,12 +101,8 @@ export function useUpdateEventType(id: string) {
       queryClient.invalidateQueries({ queryKey: eventTypeKeys.detail(id) });
       toast.success(response.message || "Event type updated successfully!");
     },
-    onError: (error: any) => {
-      const message =
-        error.response?.data?.message ||
-        error.message ||
-        "Failed to update event type. Please try again.";
-      toast.error(message);
+    onError: (error: AxiosError<ApiErrorResponse>) => {
+      toast.error(getErrorMessage(error) || "Failed to update event type. Please try again.");
     },
   });
 }
@@ -112,12 +120,21 @@ export function useDeleteEventType() {
       queryClient.invalidateQueries({ queryKey: eventTypeKeys.list() });
       toast.success(response.message || "Event type deleted successfully!");
     },
-    onError: (error: any) => {
-      const message =
-        error.response?.data?.message ||
-        error.message ||
-        "Failed to delete event type. Please try again.";
-      toast.error(message);
+    onError: (error: AxiosError<ApiErrorResponse>) => {
+      toast.error(getErrorMessage(error) || "Failed to delete event type. Please try again.");
+    },
+  });
+}
+
+/**
+ * Hook to generate booking page copy suggestions
+ */
+export function useGenerateBookingCopy() {
+  return useMutation({
+    mutationFn: (data: GenerateBookingCopyRequest) =>
+      eventTypesService.generateBookingCopy(data),
+    onError: (error: AxiosError<ApiErrorResponse>) => {
+      toast.error(getErrorMessage(error) || "Failed to generate booking copy. Please try again.");
     },
   });
 }

@@ -29,6 +29,17 @@ import { useState } from "react";
 import { toast } from "sonner";
 import type { EventType } from "@/types/event-type";
 
+function getEventCardDescription(description: string | null | undefined) {
+  const text = description?.trim() || "No description";
+  const maxLength = 88;
+
+  if (text.length <= maxLength) {
+    return text;
+  }
+
+  return `${text.slice(0, maxLength).trimEnd()}...`;
+}
+
 export default function EventTypesPage() {
   const { data: eventTypes, isLoading, error } = useEventTypes();
   const { user } = useAuthStore();
@@ -113,9 +124,9 @@ export default function EventTypesPage() {
         ) : eventTypes && eventTypes.length > 0 ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {eventTypes.map((event) => (
-              <Card key={event.id}>
-                <CardContent className="p-6">
-                  <div className="space-y-4">
+              <Card key={event.id} className="h-full">
+                <CardContent className="flex h-full flex-col p-6">
+                  <div className="flex h-full flex-col space-y-4">
                     <div className="flex items-start justify-between">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
@@ -156,11 +167,11 @@ export default function EventTypesPage() {
                       </DropdownMenu>
                     </div>
 
-                    <p className="body-sm text-muted-foreground">
-                      {event.description || "No description"}
+                    <p className="body-sm min-h-[3rem] text-muted-foreground">
+                      {getEventCardDescription(event.description)}
                     </p>
 
-                    <div className="flex items-center justify-between pt-2">
+                    <div className="mt-auto flex items-center justify-between pt-2">
                       <Badge variant="secondary">Active</Badge>
                       <Button
                         variant="ghost"

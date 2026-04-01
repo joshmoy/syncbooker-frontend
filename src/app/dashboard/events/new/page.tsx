@@ -19,6 +19,7 @@ import { ArrowLeft, Link as LinkIcon } from "lucide-react";
 import Link from "next/link";
 import { useCreateEventType } from "@/hooks/use-event-types";
 import { useAuthStore } from "@/store/auth";
+import { BookingCopyAssistant } from "@/components/dashboard/booking-copy-assistant";
 
 const durations = [15, 30, 45, 60, 90, 120];
 
@@ -46,8 +47,8 @@ export default function NewEventPage() {
   );
 
   const getBookingLinkPreview = () => {
-    const username = user?.username || user?.email?.split('@')[0] || 'your-username';
-    return `${typeof window !== 'undefined' ? window.location.origin : ''}/{username}/event-id`;
+    const username = user?.username || user?.email?.split("@")[0] || "your-username";
+    return `${typeof window !== "undefined" ? window.location.origin : ""}/${username}/event-id`;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -55,7 +56,7 @@ export default function NewEventPage() {
 
     createEventType.mutate({
       title,
-      durationMinutes: parseInt(duration),
+      durationMinutes: parseInt(duration, 10),
       description: description || undefined,
       color: color || undefined,
     });
@@ -113,6 +114,16 @@ export default function NewEventPage() {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  <BookingCopyAssistant
+                    title={title}
+                    durationMinutes={parseInt(duration, 10)}
+                    existingDescription={description}
+                    onApplySuggestion={(suggestion) => {
+                      setTitle(suggestion.title);
+                      setDescription(suggestion.description);
+                    }}
+                  />
 
                   <div className="space-y-2">
                     <Label htmlFor="color">Color</Label>
@@ -205,7 +216,7 @@ export default function NewEventPage() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <p className="body-sm text-muted-foreground">
-                  After creating this event, you'll get a unique link to share:
+                  After creating this event, you&apos;ll get a unique link to share:
                 </p>
                 <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 p-3">
                   <LinkIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />

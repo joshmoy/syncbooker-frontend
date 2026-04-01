@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, use } from "react";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,8 @@ import { useEventType, useUpdateEventType } from "@/hooks/use-event-types";
 import { useAuthStore } from "@/store/auth";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { BookingCopyAssistant } from "@/components/dashboard/booking-copy-assistant";
+import type { EventType } from "@/types/event-type";
 
 const durations = [15, 30, 45, 60, 90, 120];
 
@@ -44,46 +46,14 @@ export default function EditEventPage({
   const { data: eventType, isLoading } = useEventType(id);
   const updateEventType = useUpdateEventType(id);
 
-  const [title, setTitle] = useState("");
-  const [duration, setDuration] = useState("30");
-  const [description, setDescription] = useState("");
-  const [color, setColor] = useState("#3B82F6");
-
   const getBookingLink = () => {
-    const username = user?.username || user?.email?.split('@')[0] || eventType?.userId;
+    const username = user?.username || user?.email?.split("@")[0] || eventType?.userId;
     return `${window.location.origin}/${username}/${id}`;
   };
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(getBookingLink());
     toast.success("Booking link copied to clipboard!");
-  };
-
-  useEffect(() => {
-    if (eventType) {
-      setTitle(eventType.title);
-      setDuration(eventType.durationMinutes.toString());
-      setDescription(eventType.description || "");
-      setColor(eventType.color || "#3B82F6");
-    }
-  }, [eventType]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    updateEventType.mutate(
-      {
-        title,
-        durationMinutes: parseInt(duration),
-        description: description || undefined,
-        color: color || undefined,
-      },
-      {
-        onSuccess: () => {
-          router.push("/dashboard/events");
-        },
-      }
-    );
   };
 
   if (isLoading) {
@@ -98,6 +68,67 @@ export default function EditEventPage({
       </DashboardLayout>
     );
   }
+
+  if (!eventType) {
+    return (
+      <DashboardLayout>
+        <div className="flex min-h-[400px] items-center justify-center">
+          <p className="body-sm text-muted-foreground">Event type not found.</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  return (
+    <EditEventForm
+      eventType={eventType}
+      onCopyLink={handleCopyLink}
+      getBookingLink={getBookingLink}
+      onSave={(payload) =>
+        updateEventType.mutate(payload, {
+          onSuccess: () => {
+            router.push("/dashboard/events");
+          },
+        })
+      }
+      isSaving={updateEventType.isPending}
+    />
+  );
+}
+
+function EditEventForm({
+  eventType,
+  onSave,
+  isSaving,
+  getBookingLink,
+  onCopyLink,
+}: {
+  eventType: EventType;
+  onSave: (payload: {
+    title: string;
+    durationMinutes: number;
+    description?: string;
+    color?: string;
+  }) => void;
+  isSaving: boolean;
+  getBookingLink: () => string;
+  onCopyLink: () => void;
+}) {
+  const [title, setTitle] = useState(eventType.title);
+  const [duration, setDuration] = useState(eventType.durationMinutes.toString());
+  const [description, setDescription] = useState(eventType.description || "");
+  const [color, setColor] = useState(eventType.color || "#3B82F6");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    onSave({
+      title,
+      durationMinutes: parseInt(duration, 10),
+      description: description || undefined,
+      color: color || undefined,
+    });
+  };
 
   return (
     <DashboardLayout>
@@ -152,6 +183,16 @@ export default function EditEventPage({
                     </Select>
                   </div>
 
+                  <BookingCopyAssistant
+                    title={title}
+                    durationMinutes={parseInt(duration, 10)}
+                    existingDescription={description}
+                    onApplySuggestion={(suggestion) => {
+                      setTitle(suggestion.title);
+                      setDescription(suggestion.description);
+                    }}
+                  />
+
                   <div className="space-y-2">
                     <Label htmlFor="color">Color</Label>
                     <Select value={color} onValueChange={setColor}>
@@ -191,9 +232,9 @@ export default function EditEventPage({
                   <div className="flex gap-4">
                     <Button
                       type="submit"
-                      disabled={updateEventType.isPending}
+                      disabled={isSaving}
                     >
-                      {updateEventType.isPending ? "Saving..." : "Save Changes"}
+                      {isSaving ? "Saving..." : "Save Changes"}
                     </Button>
                     <Link href="/dashboard/events">
                       <Button type="button" variant="outline">
@@ -257,7 +298,7 @@ export default function EditEventPage({
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={handleCopyLink}
+                    onClick={onCopyLink}
                     title="Copy link"
                   >
                     <Copy className="h-4 w-4" />

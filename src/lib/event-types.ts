@@ -6,6 +6,8 @@ import {
   EventType,
   EventTypeResponse,
   EventTypesResponse,
+  GenerateBookingCopyRequest,
+  GenerateBookingCopyResponse,
 } from "@/types/event-type";
 
 /**
@@ -75,6 +77,19 @@ export const eventTypesService = {
   async deleteEventType(id: string): Promise<{ success: boolean; message: string }> {
     const response = await apiInstance.delete<{ success: boolean; message: string }>(
       `/event-types/${id}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Generate booking page copy suggestions
+   */
+  async generateBookingCopy(
+    data: GenerateBookingCopyRequest
+  ): Promise<GenerateBookingCopyResponse> {
+    const response = await apiInstance.post<GenerateBookingCopyResponse>(
+      "/event-types/generate-copy",
+      data
     );
     return response.data;
   },

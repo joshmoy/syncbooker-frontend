@@ -178,3 +178,45 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .gemini-frame {
+    background:
+      linear-gradient(135deg, rgba(66, 133, 244, 0.85), rgba(123, 97, 255, 0.78) 30%, rgba(234, 67, 53, 0.72) 55%, rgba(251, 188, 5, 0.8) 78%, rgba(52, 168, 83, 0.78));
+    background-size: 220% 220%;
+    box-shadow:
+      0 20px 45px rgba(66, 133, 244, 0.12),
+      0 8px 18px rgba(123, 97, 255, 0.12);
+    animation: gemini-border-shift 8s ease-in-out infinite, gemini-border-glow 4.5s ease-in-out infinite;
+  }
+}
+
+@keyframes gemini-border-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes gemini-border-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 20px 45px rgba(66, 133, 244, 0.12),
+      0 8px 18px rgba(123, 97, 255, 0.12);
+  }
+
+  50% {
+    box-shadow:
+      0 24px 60px rgba(66, 133, 244, 0.18),
+      0 10px 24px rgba(123, 97, 255, 0.16),
+      0 0 0 1px rgba(251, 188, 5, 0.18);
+  }
+}
