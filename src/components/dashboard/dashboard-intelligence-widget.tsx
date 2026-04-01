@@ -2,7 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, Loader2, MessageSquare, Mic, Sparkles, Square, X } from "lucide-react";
+import {
+  ArrowUpRight,
+  Loader2,
+  MessageSquare,
+  Mic,
+  SendHorizontal,
+  Sparkles,
+  Square,
+  X,
+} from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -16,6 +25,7 @@ import {
   useCreateEventType,
   useGenerateBookingFaqs,
   useGenerateEventTypeIdeas,
+  useGenerateEventTypeIdeasFromAudio,
 } from "@/hooks/use-event-types";
 import type { EventTypeDraft } from "@/types/event-type";
 
@@ -48,6 +58,12 @@ type IntelligenceMessage =
       faqsAdded?: boolean;
     };
 
+type VoiceDraft = {
+  audioDataUrl: string;
+  durationSeconds: number;
+  mimeType: string;
+};
+
 function createId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
@@ -59,7 +75,7 @@ const defaultMessages: IntelligenceMessage[] = [
     id: createId(),
     role: "assistant",
     text:
-      "Describe what you offer, and I can turn it into event type drafts you can create right here.",
+      "Describe what you offer or record a voice note, and I can turn it into event type drafts you can create right here.",
   },
 ];
 
@@ -96,9 +112,22 @@ function blobToDataUrl(blob: Blob) {
   });
 }
 
+async function dataUrlToBlob(dataUrl: string): Promise<Blob> {
+  const response = await fetch(dataUrl);
+  return response.blob();
+}
+
+function formatDuration(totalSeconds: number) {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
+
 export function DashboardIntelligenceWidget() {
   const queryClient = useQueryClient();
   const generateEventTypeIdeas = useGenerateEventTypeIdeas();
+  const generateEventTypeIdeasFromAudio = useGenerateEventTypeIdeasFromAudio();
   const generateBookingFaqs = useGenerateBookingFaqs();
   const createEventType = useCreateEventType(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -108,11 +137,15 @@ export function DashboardIntelligenceWidget() {
   const [messages, setMessages] = useState<IntelligenceMessage[]>(getDefaultMessages);
   const [hasHydrated, setHasHydrated] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [pendingVoiceDraft, setPendingVoiceDraft] = useState<VoiceDraft | null>(null);
+  const [isPreparingVoiceDraft, setIsPreparingVoiceDraft] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const recordingChunksRef = useRef<Blob[]>([]);
   const recordingStartedAtRef = useRef<number | null>(null);
   const recordingTimeoutRef = useRef<number | null>(null);
+  const recordingIntervalRef = useRef<number | null>(null);
   const discardRecordingRef = useRef(false);
 
   useEffect(() => {
@@ -127,10 +160,12 @@ export function DashboardIntelligenceWidget() {
         isOpen?: boolean;
         prompt?: string;
         messages?: IntelligenceMessage[];
+        pendingVoiceDraft?: VoiceDraft | null;
       };
 
       setIsOpen(parsedState.isOpen ?? false);
       setPrompt(parsedState.prompt ?? "");
+      setPendingVoiceDraft(parsedState.pendingVoiceDraft ?? null);
       setMessages(
         Array.isArray(parsedState.messages) && parsedState.messages.length > 0
           ? parsedState.messages
@@ -154,9 +189,10 @@ export function DashboardIntelligenceWidget() {
         isOpen,
         prompt,
         messages,
+        pendingVoiceDraft,
       })
     );
-  }, [hasHydrated, isOpen, prompt, messages]);
+  }, [hasHydrated, isOpen, prompt, messages, pendingVoiceDraft]);
 
   const appendMessage = (message: IntelligenceMessage) => {
     setMessages((current) => [...current, message]);
@@ -166,6 +202,13 @@ export function DashboardIntelligenceWidget() {
     if (recordingTimeoutRef.current) {
       window.clearTimeout(recordingTimeoutRef.current);
       recordingTimeoutRef.current = null;
+    }
+  };
+
+  const clearRecordingInterval = () => {
+    if (recordingIntervalRef.current) {
+      window.clearInterval(recordingIntervalRef.current);
+      recordingIntervalRef.current = null;
     }
   };
 
@@ -182,7 +225,10 @@ export function DashboardIntelligenceWidget() {
     discardRecordingRef.current = false;
     mediaRecorderRef.current = null;
     setIsRecording(false);
+    setRecordingSeconds(0);
+    setIsPreparingVoiceDraft(false);
     clearRecordingTimeout();
+    clearRecordingInterval();
     stopMediaStream();
   };
 
@@ -202,6 +248,7 @@ export function DashboardIntelligenceWidget() {
     setPrompt("");
     setActiveCreateTitle(null);
     setActiveFaqEventId(null);
+    setPendingVoiceDraft(null);
     setMessages(getDefaultMessages());
   };
 
@@ -224,23 +271,31 @@ export function DashboardIntelligenceWidget() {
       queryClient.invalidateQueries({ queryKey: eventTypeKeys.detail(variables.id) });
     },
   });
+  const isGeneratingIdeas =
+    generateEventTypeIdeas.isPending || generateEventTypeIdeasFromAudio.isPending;
 
-  const handleGenerate = () => {
-    const trimmedPrompt = prompt.trim();
-
-    if (!trimmedPrompt) {
-      return;
-    }
-
-    appendMessage({
-      id: createId(),
-      role: "user",
-      text: trimmedPrompt,
-    });
-    setPrompt("");
+  const submitPromptForIdeas = (
+    promptText: string,
+    voiceDraft?: Pick<VoiceDraft, "audioDataUrl" | "durationSeconds">
+  ) => {
+    appendMessage(
+      voiceDraft
+        ? {
+            id: createId(),
+            role: "user",
+            text: "Voice note",
+            audioDataUrl: voiceDraft.audioDataUrl,
+            durationSeconds: voiceDraft.durationSeconds,
+          }
+        : {
+            id: createId(),
+            role: "user",
+            text: promptText,
+          }
+    );
 
     generateEventTypeIdeas.mutate(
-      { prompt: trimmedPrompt },
+      { prompt: promptText },
       {
         onSuccess: (response) => {
           appendMessage({
@@ -252,6 +307,62 @@ export function DashboardIntelligenceWidget() {
         },
       }
     );
+  };
+
+  const handleGenerate = () => {
+    const trimmedPrompt = prompt.trim();
+
+    if (!trimmedPrompt) {
+      return;
+    }
+
+    setPrompt("");
+    submitPromptForIdeas(trimmedPrompt);
+  };
+
+  const handleSendVoiceDraft = async () => {
+    if (!pendingVoiceDraft) {
+      toast.error("Record a voice note with event details before sending it.");
+      return;
+    }
+
+    const draftToSend = pendingVoiceDraft;
+    setPendingVoiceDraft(null);
+
+    try {
+      const audioBlob = await dataUrlToBlob(draftToSend.audioDataUrl);
+
+      generateEventTypeIdeasFromAudio.mutate(
+        {
+          audio: audioBlob,
+          mimeType: draftToSend.mimeType,
+        },
+        {
+          onSuccess: (response) => {
+            appendMessage({
+              id: createId(),
+              role: "user",
+              text: "Voice note",
+              audioDataUrl: draftToSend.audioDataUrl,
+              durationSeconds: draftToSend.durationSeconds,
+            });
+
+            appendMessage({
+              id: createId(),
+              role: "assistant",
+              text: "I drafted a few event types for you. Choose one and I’ll create it immediately.",
+              suggestions: response.suggestions,
+            });
+          },
+          onError: () => {
+            setPendingVoiceDraft(draftToSend);
+          },
+        }
+      );
+    } catch {
+      setPendingVoiceDraft(draftToSend);
+      toast.error("We couldn't prepare that voice note. Please try again.");
+    }
   };
 
   const handleCreateEvent = (suggestion: EventTypeDraft) => {
@@ -350,6 +461,9 @@ export function DashboardIntelligenceWidget() {
       recordingChunksRef.current = [];
       recordingStartedAtRef.current = Date.now();
       discardRecordingRef.current = false;
+      setRecordingSeconds(0);
+      setPendingVoiceDraft(null);
+      setIsPreparingVoiceDraft(false);
 
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
@@ -364,36 +478,35 @@ export function DashboardIntelligenceWidget() {
           type: recorder.mimeType || "audio/webm",
         });
 
-        resetRecorderState();
+        setIsPreparingVoiceDraft(true);
 
         if (shouldDiscard || audioBlob.size === 0) {
+          resetRecorderState();
           return;
         }
 
         try {
           const audioDataUrl = await blobToDataUrl(audioBlob);
 
-          appendMessage({
-            id: createId(),
-            role: "user",
-            text: "Voice note",
+          setPendingVoiceDraft({
             audioDataUrl,
             durationSeconds: Math.max(1, Math.round(durationMs / 1000)),
-          });
-
-          appendMessage({
-            id: createId(),
-            role: "assistant",
-            text:
-              "Voice note saved. If you want event drafts from it, add a short text note with the offer details and I’ll take it from there.",
+            mimeType: recorder.mimeType || "audio/webm",
           });
         } catch {
           toast.error("We couldn't save that voice note. Please try again.");
+        } finally {
+          resetRecorderState();
         }
       };
 
       recorder.start();
       setIsRecording(true);
+      recordingIntervalRef.current = window.setInterval(() => {
+        if (recordingStartedAtRef.current) {
+          setRecordingSeconds(Math.max(1, Math.floor((Date.now() - recordingStartedAtRef.current) / 1000)));
+        }
+      }, 250);
       recordingTimeoutRef.current = window.setTimeout(() => {
         stopVoiceNoteRecording();
         toast.message("Voice note stopped after 90 seconds.");
@@ -417,7 +530,7 @@ export function DashboardIntelligenceWidget() {
                 </div>
                 <CardTitle className="heading-sm">Event Builder Chat</CardTitle>
                 <p className="body-sm mt-2 text-muted-foreground">
-                  Generate event drafts and create them without leaving the page.
+                  Generate event drafts from text or voice without leaving the page.
                 </p>
               </div>
               <Button
@@ -450,15 +563,23 @@ export function DashboardIntelligenceWidget() {
                             : "border border-border bg-card"
                         }`}
                       >
-                        <p className="body-sm">{message.text}</p>
-
-                        {"audioDataUrl" in message && (
-                          <div className="mt-3 rounded-xl border border-border/80 bg-background/70 p-3">
-                            <audio controls src={message.audioDataUrl} className="w-full" />
-                            <p className="body-sm mt-2 text-muted-foreground">
-                              {message.durationSeconds} second voice note
-                            </p>
+                        {"audioDataUrl" in message ? (
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="label-sm uppercase tracking-[0.18em] opacity-80">
+                                Voice Note
+                              </span>
+                              <span className="body-sm opacity-80">
+                                {formatDuration(message.durationSeconds)}
+                              </span>
+                            </div>
+                            <p className="body-sm leading-6">Recorded voice note</p>
+                            <div className="rounded-xl border border-white/20 bg-black/10 p-3">
+                              <audio controls src={message.audioDataUrl} className="w-full" />
+                            </div>
                           </div>
+                        ) : (
+                          <p className="body-sm">{message.text}</p>
                         )}
 
                         {"suggestions" in message && message.suggestions.length > 0 && (
@@ -557,7 +678,7 @@ export function DashboardIntelligenceWidget() {
                   );
                 })}
 
-                {generateEventTypeIdeas.isPending && (
+                {isGeneratingIdeas && (
                   <div className="flex justify-start">
                     <div className="rounded-2xl border border-border bg-card px-4 py-3 shadow-sm">
                       <div className="flex items-center gap-3 text-muted-foreground">
@@ -572,50 +693,124 @@ export function DashboardIntelligenceWidget() {
 
             <div className="border-t border-border/80 p-4">
               <div className="space-y-3">
-                <Textarea
-                  rows={4}
-                  placeholder="Try: I offer 20-minute intro calls for candidates and 60-minute paid strategy sessions for founders."
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                />
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <Button
-                    type="button"
-                    variant={isRecording ? "destructive" : "outline"}
-                    onClick={handleVoiceNoteToggle}
-                    className="min-w-[150px]"
-                  >
-                    {isRecording ? (
-                      <>
-                        <Square className="mr-2 h-4 w-4" />
-                        Stop Recording
-                      </>
-                    ) : (
-                      <>
-                        <Mic className="mr-2 h-4 w-4" />
-                        Record Voice Note
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={handleGenerate}
-                    disabled={!prompt.trim() || generateEventTypeIdeas.isPending || isRecording}
-                    className="bg-[linear-gradient(135deg,#4285f4,#7b61ff_40%,#34a853)] text-white shadow-sm hover:opacity-95"
-                  >
-                    {generateEventTypeIdeas.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="mr-2 h-4 w-4" />
-                        Generate Drafts
-                      </>
-                    )}
-                  </Button>
+                <div className="flex items-end gap-3">
+                  {isRecording ? (
+                    <div className="gemini-frame flex-1 rounded-2xl p-px">
+                      <div className="flex min-h-[96px] items-center gap-4 rounded-[calc(1rem-1px)] bg-background px-4 py-3">
+                        <div className="flex items-end gap-1">
+                          {[0, 1, 2, 3, 4, 5].map((bar) => (
+                            <span
+                              key={bar}
+                              className="w-1.5 rounded-full bg-primary/80 animate-pulse"
+                              style={{
+                                height: `${16 + ((bar % 3) + 1) * 8}px`,
+                                animationDelay: `${bar * 0.12}s`,
+                              }}
+                            />
+                          ))}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="label-md text-foreground">Recording voice note</p>
+                          <p className="body-sm mt-1 text-muted-foreground">
+                            {formatDuration(recordingSeconds)} elapsed
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : pendingVoiceDraft ? (
+                    <div className="flex min-h-[96px] flex-1 flex-col justify-center rounded-2xl border border-border/80 bg-muted/30 px-4 py-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="label-md text-foreground">Voice note ready</p>
+                        <span className="body-sm text-muted-foreground">
+                          {formatDuration(pendingVoiceDraft.durationSeconds)}
+                        </span>
+                      </div>
+                      <p className="body-sm mt-2 text-muted-foreground">
+                        Send to generate event drafts from this recording.
+                      </p>
+                    </div>
+                  ) : (
+                    <Textarea
+                      rows={4}
+                      className="flex-1"
+                      placeholder="Try: I offer 20-minute intro calls for candidates and 60-minute paid strategy sessions for founders."
+                      value={prompt}
+                      onChange={(e) => setPrompt(e.target.value)}
+                    />
+                  )}
+
+                  {isRecording ? (
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      onClick={handleVoiceNoteToggle}
+                      className="h-11 w-11 shrink-0 rounded-full"
+                    >
+                      <Square className="h-4 w-4" />
+                    </Button>
+                  ) : pendingVoiceDraft ? (
+                    <Button
+                      type="button"
+                      size="icon"
+                      onClick={handleSendVoiceDraft}
+                      disabled={isGeneratingIdeas || isPreparingVoiceDraft}
+                      className="h-11 w-11 shrink-0 rounded-full bg-[linear-gradient(135deg,#4285f4,#7b61ff_40%,#34a853)] text-white shadow-sm hover:opacity-95"
+                    >
+                      {isGeneratingIdeas || isPreparingVoiceDraft ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <SendHorizontal className="h-4 w-4" />
+                      )}
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={handleVoiceNoteToggle}
+                      className="h-11 w-11 shrink-0 rounded-full"
+                    >
+                      <Mic className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
+
+                {!isRecording && !pendingVoiceDraft && (
+                  <div className="flex justify-end">
+                    <Button
+                      type="button"
+                      onClick={handleGenerate}
+                      disabled={!prompt.trim() || isGeneratingIdeas}
+                      className="bg-[linear-gradient(135deg,#4285f4,#7b61ff_40%,#34a853)] text-white shadow-sm hover:opacity-95"
+                    >
+                      {isGeneratingIdeas ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="mr-2 h-4 w-4" />
+                          Generate Drafts
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
+
+                {pendingVoiceDraft && (
+                  <p className="body-sm text-muted-foreground">
+                    Send this voice note to generate event drafts.
+                  </p>
+                )}
+
+                {isPreparingVoiceDraft && (
+                  <p className="body-sm text-muted-foreground">
+                    Preparing your recording...
+                  </p>
+                )}
+
                 <p className="body-sm text-muted-foreground">
                   Voice notes stay in this chat, and they reset when you start another event or log
                   out.

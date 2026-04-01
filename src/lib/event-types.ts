@@ -11,6 +11,8 @@ import {
   GenerateBookingFaqRequest,
   GenerateBookingFaqResponse,
   GenerateEventTypeIdeasRequest,
+  GenerateEventTypeIdeasFromAudioRequest,
+  GenerateEventTypeIdeasFromAudioResponse,
   GenerateEventTypeIdeasResponse,
 } from "@/types/event-type";
 
@@ -121,6 +123,34 @@ export const eventTypesService = {
       "/event-types/generate-ideas",
       data
     );
+    return response.data;
+  },
+
+  /**
+   * Generate event type ideas from an audio note
+   */
+  async generateEventTypeIdeasFromAudio(
+    data: GenerateEventTypeIdeasFromAudioRequest
+  ): Promise<GenerateEventTypeIdeasFromAudioResponse> {
+    const formData = new FormData();
+    const extension = data.mimeType.split("/")[1] || "webm";
+
+    formData.append("audio", data.audio, `voice-note.${extension}`);
+
+    if (data.audience) {
+      formData.append("audience", data.audience);
+    }
+
+    const response = await apiInstance.post<GenerateEventTypeIdeasFromAudioResponse>(
+      "/event-types/generate-ideas-audio",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
     return response.data;
   },
 };

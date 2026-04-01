@@ -71,6 +71,12 @@ export interface GenerateEventTypeIdeasRequest {
   audience?: string;
 }
 
+export interface GenerateEventTypeIdeasFromAudioRequest {
+  audio: Blob;
+  mimeType: string;
+  audience?: string;
+}
+
 export interface UpdateEventTypeRequest {
   title?: string;
   description?: string;
@@ -105,5 +111,12 @@ export interface GenerateBookingFaqResponse {
 export interface GenerateEventTypeIdeasResponse {
   message: string;
   provider: "gemini" | "template";
+  suggestions: EventTypeDraft[];
+}
+
+export interface GenerateEventTypeIdeasFromAudioResponse {
+  message: string;
+  provider: "gemini";
+  transcript: string;
   suggestions: EventTypeDraft[];
 }

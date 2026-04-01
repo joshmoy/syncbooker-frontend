@@ -7,6 +7,7 @@ import type {
   GenerateBookingCopyRequest,
   GenerateBookingFaqRequest,
   GenerateEventTypeIdeasRequest,
+  GenerateEventTypeIdeasFromAudioRequest,
   CreateEventTypeRequest,
   UpdateEventTypeRequest,
 } from "@/types/event-type";
@@ -165,6 +166,21 @@ export function useGenerateEventTypeIdeas() {
       eventTypesService.generateEventTypeIdeas(data),
     onError: (error: AxiosError<ApiErrorResponse>) => {
       toast.error(getErrorMessage(error) || "Failed to generate event ideas. Please try again.");
+    },
+  });
+}
+
+/**
+ * Hook to generate event type ideas from an audio note
+ */
+export function useGenerateEventTypeIdeasFromAudio() {
+  return useMutation({
+    mutationFn: (data: GenerateEventTypeIdeasFromAudioRequest) =>
+      eventTypesService.generateEventTypeIdeasFromAudio(data),
+    onError: (error: AxiosError<ApiErrorResponse>) => {
+      toast.error(
+        getErrorMessage(error) || "Failed to generate event ideas from audio. Please try again."
+      );
     },
   });
 }
