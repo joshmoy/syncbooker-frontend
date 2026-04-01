@@ -18,7 +18,6 @@ import { ArrowLeft, Loader2, Copy, Link as LinkIcon } from "lucide-react";
 import Link from "next/link";
 import { useEventType, useUpdateEventType } from "@/hooks/use-event-types";
 import { useAuthStore } from "@/store/auth";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { BookingCopyAssistant } from "@/components/dashboard/booking-copy-assistant";
 import type { EventType } from "@/types/event-type";
@@ -35,12 +34,11 @@ const colorOptions = [
   { value: "#6B7280", label: "Gray" },
 ];
 
-export default function EditEventPage({
+export default function EventTypeDetailsPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const router = useRouter();
   const { id } = use(params);
   const { user } = useAuthStore();
   const { data: eventType, isLoading } = useEventType(id);
@@ -80,23 +78,17 @@ export default function EditEventPage({
   }
 
   return (
-    <EditEventForm
+    <EventTypeDetailsForm
       eventType={eventType}
       onCopyLink={handleCopyLink}
       getBookingLink={getBookingLink}
-      onSave={(payload) =>
-        updateEventType.mutate(payload, {
-          onSuccess: () => {
-            router.push("/dashboard/events");
-          },
-        })
-      }
+      onSave={(payload) => updateEventType.mutate(payload)}
       isSaving={updateEventType.isPending}
     />
   );
 }
 
-function EditEventForm({
+function EventTypeDetailsForm({
   eventType,
   onSave,
   isSaving,
@@ -141,9 +133,9 @@ function EditEventForm({
             </Button>
           </Link>
           <div>
-            <h1 className="heading-lg">Edit Event Type</h1>
+            <h1 className="heading-lg">Event Type Details</h1>
             <p className="body-md mt-2 text-muted-foreground">
-              Update your event type details
+              Update this event type directly from its details page
             </p>
           </div>
         </div>
@@ -230,15 +222,12 @@ function EditEventForm({
                   </div>
 
                   <div className="flex gap-4">
-                    <Button
-                      type="submit"
-                      disabled={isSaving}
-                    >
+                    <Button type="submit" disabled={isSaving}>
                       {isSaving ? "Saving..." : "Save Changes"}
                     </Button>
                     <Link href="/dashboard/events">
                       <Button type="button" variant="outline">
-                        Cancel
+                        Back to Events
                       </Button>
                     </Link>
                   </div>
@@ -263,9 +252,7 @@ function EditEventForm({
                       />
                     )}
                   </div>
-                  <p className="body-sm text-muted-foreground mb-4">
-                    {duration} minutes
-                  </p>
+                  <p className="body-sm mb-4 text-muted-foreground">{duration} minutes</p>
                   <p className="body-sm">
                     {description || "Event description will appear here..."}
                   </p>
@@ -291,9 +278,7 @@ function EditEventForm({
                 </p>
                 <div className="flex items-center gap-2">
                   <div className="flex-1 rounded-lg border border-border bg-muted/50 p-3">
-                    <code className="body-sm break-all">
-                      {getBookingLink()}
-                    </code>
+                    <code className="body-sm break-all">{getBookingLink()}</code>
                   </div>
                   <Button
                     variant="outline"

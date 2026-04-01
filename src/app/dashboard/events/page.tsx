@@ -130,7 +130,12 @@ export default function EventTypesPage() {
                     <div className="flex items-start justify-between">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <h3 className="heading-sm">{event.title}</h3>
+                          <Link
+                            href={`/dashboard/events/${event.id}`}
+                            className="heading-sm transition-colors hover:text-primary"
+                          >
+                            {event.title}
+                          </Link>
                           {event.color && (
                             <div
                               className="h-3 w-3 rounded-full"
@@ -153,8 +158,8 @@ export default function EventTypesPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem asChild>
-                            <Link href={`/dashboard/events/${event.id}/edit`}>
-                              Edit
+                            <Link href={`/dashboard/events/${event.id}`}>
+                              View
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem

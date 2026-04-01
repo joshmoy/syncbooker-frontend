@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-export const metadata: Metadata = { title: "Edit Event Type" };
+export const metadata: Metadata = { title: "Event Type Details" };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
