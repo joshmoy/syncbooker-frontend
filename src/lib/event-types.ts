@@ -8,6 +8,8 @@ import {
   EventTypesResponse,
   GenerateBookingCopyRequest,
   GenerateBookingCopyResponse,
+  GenerateBookingFaqRequest,
+  GenerateBookingFaqResponse,
 } from "@/types/event-type";
 
 /**
@@ -89,6 +91,19 @@ export const eventTypesService = {
   ): Promise<GenerateBookingCopyResponse> {
     const response = await apiInstance.post<GenerateBookingCopyResponse>(
       "/event-types/generate-copy",
+      data
+    );
+    return response.data;
+  },
+
+  /**
+   * Generate booking page FAQ suggestions
+   */
+  async generateBookingFaqs(
+    data: GenerateBookingFaqRequest
+  ): Promise<GenerateBookingFaqResponse> {
+    const response = await apiInstance.post<GenerateBookingFaqResponse>(
+      "/event-types/generate-faqs",
       data
     );
     return response.data;

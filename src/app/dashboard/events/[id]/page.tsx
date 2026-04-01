@@ -20,7 +20,8 @@ import { useEventType, useUpdateEventType } from "@/hooks/use-event-types";
 import { useAuthStore } from "@/store/auth";
 import { toast } from "sonner";
 import { BookingCopyAssistant } from "@/components/dashboard/booking-copy-assistant";
-import type { EventType } from "@/types/event-type";
+import { BookingFaqAssistant } from "@/components/dashboard/booking-faq-assistant";
+import type { EventType, EventTypeFaq } from "@/types/event-type";
 
 const durations = [15, 30, 45, 60, 90, 120];
 
@@ -101,6 +102,7 @@ function EventTypeDetailsForm({
     durationMinutes: number;
     description?: string;
     color?: string;
+    faqs?: EventTypeFaq[];
   }) => void;
   isSaving: boolean;
   getBookingLink: () => string;
@@ -110,6 +112,7 @@ function EventTypeDetailsForm({
   const [duration, setDuration] = useState(eventType.durationMinutes.toString());
   const [description, setDescription] = useState(eventType.description || "");
   const [color, setColor] = useState(eventType.color || "#3B82F6");
+  const [faqs, setFaqs] = useState<EventTypeFaq[]>(eventType.faqs || []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,6 +122,7 @@ function EventTypeDetailsForm({
       durationMinutes: parseInt(duration, 10),
       description: description || undefined,
       color: color || undefined,
+      faqs,
     });
   };
 
@@ -221,6 +225,93 @@ function EventTypeDetailsForm({
                     </p>
                   </div>
 
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-base">Booking Page FAQs</Label>
+                      <p className="body-sm mt-1 text-muted-foreground">
+                        Add answers to common questions visitors may have before booking.
+                      </p>
+                    </div>
+                    <BookingFaqAssistant
+                      title={title}
+                      description={description}
+                      onApplyFaqs={(nextFaqs) => setFaqs(nextFaqs)}
+                    />
+                    {faqs.length > 0 ? (
+                      <div className="space-y-4">
+                        {faqs.map((faq, index) => (
+                          <div key={index} className="rounded-lg border border-border p-4">
+                            <div className="space-y-2">
+                              <Label htmlFor={`faq-question-${index}`}>Question {index + 1}</Label>
+                              <Input
+                                id={`faq-question-${index}`}
+                                value={faq.question}
+                                onChange={(e) => {
+                                  const nextFaqs = [...faqs];
+                                  nextFaqs[index] = {
+                                    ...nextFaqs[index],
+                                    question: e.target.value,
+                                  };
+                                  setFaqs(nextFaqs);
+                                }}
+                              />
+                            </div>
+
+                            <div className="mt-4 space-y-2">
+                              <Label htmlFor={`faq-answer-${index}`}>Answer</Label>
+                              <Textarea
+                                id={`faq-answer-${index}`}
+                                rows={3}
+                                value={faq.answer}
+                                onChange={(e) => {
+                                  const nextFaqs = [...faqs];
+                                  nextFaqs[index] = {
+                                    ...nextFaqs[index],
+                                    answer: e.target.value,
+                                  };
+                                  setFaqs(nextFaqs);
+                                }}
+                              />
+                            </div>
+
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              className="mt-3 px-0 text-destructive hover:text-destructive"
+                              onClick={() =>
+                                setFaqs(faqs.filter((_, faqIndex) => faqIndex !== index))
+                              }
+                            >
+                              Remove FAQ
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="rounded-lg border border-dashed border-border p-4">
+                        <p className="body-sm text-muted-foreground">
+                          No FAQs yet. Generate them with AI above, or add them manually.
+                        </p>
+                      </div>
+                    )}
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() =>
+                        setFaqs([
+                          ...faqs,
+                          {
+                            question: "",
+                            answer: "",
+                          },
+                        ])
+                      }
+                    >
+                      Add FAQ
+                    </Button>
+                  </div>
+
                   <div className="flex gap-4">
                     <Button type="submit" disabled={isSaving}>
                       {isSaving ? "Saving..." : "Save Changes"}
@@ -246,10 +337,7 @@ function EventTypeDetailsForm({
                   <div className="mb-2 flex items-center gap-2">
                     <h3 className="heading-sm">{title || "Event Title"}</h3>
                     {color && (
-                      <div
-                        className="h-4 w-4 rounded-full"
-                        style={{ backgroundColor: color }}
-                      />
+                      <div className="h-4 w-4 rounded-full" style={{ backgroundColor: color }} />
                     )}
                   </div>
                   <p className="body-sm mb-4 text-muted-foreground">{duration} minutes</p>
@@ -280,12 +368,7 @@ function EventTypeDetailsForm({
                   <div className="flex-1 rounded-lg border border-border bg-muted/50 p-3">
                     <code className="body-sm break-all">{getBookingLink()}</code>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={onCopyLink}
-                    title="Copy link"
-                  >
+                  <Button variant="outline" size="icon" onClick={onCopyLink} title="Copy link">
                     <Copy className="h-4 w-4" />
                   </Button>
                 </div>

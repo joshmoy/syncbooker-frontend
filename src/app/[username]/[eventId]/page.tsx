@@ -12,6 +12,12 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Calendar as CalendarIcon, Clock, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { usePublicEventType } from "@/hooks/use-event-types";
 import { useTrackVisitor } from "@/hooks/use-visitor";
 import { useAvailableSlots, useCreatePublicBooking } from "@/hooks/use-bookings";
@@ -247,6 +253,24 @@ export default function BookingPage({
                     </div>
                     {eventType.description && (
                       <p className="body-md text-muted-foreground">{eventType.description}</p>
+                    )}
+
+                    {eventType.faqs && eventType.faqs.length > 0 && (
+                      <div className="pt-2">
+                        <h2 className="heading-sm mb-2 text-xl">FAQs</h2>
+                        <Accordion type="single" collapsible className="w-full">
+                          {eventType.faqs.map((faq, index) => (
+                            <AccordionItem key={`${faq.question}-${index}`} value={`faq-${index}`}>
+                              <AccordionTrigger className="body-sm text-foreground hover:no-underline">
+                                {faq.question}
+                              </AccordionTrigger>
+                              <AccordionContent className="body-sm text-muted-foreground">
+                                {faq.answer}
+                              </AccordionContent>
+                            </AccordionItem>
+                          ))}
+                        </Accordion>
+                      </div>
                     )}
                   </div>
                 </CardContent>

@@ -3,27 +3,9 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Copy, Settings } from "lucide-react";
-import { useAuthStore } from "@/store/auth";
-import { toast } from "sonner";
-import { useEventTypes } from "@/hooks/use-event-types";
+import { Calendar, Clock, Settings } from "lucide-react";
 
 export function QuickActions() {
-  const { user } = useAuthStore();
-  const { data: eventTypes } = useEventTypes();
-  const firstEventType = eventTypes?.[0];
-
-  const handleCopyLink = () => {
-    if (user?.username && firstEventType) {
-      const bookingLink = `${window.location.origin}/${user.username}/${firstEventType.id}`;
-      navigator.clipboard.writeText(bookingLink);
-      toast.success("Booking link copied to clipboard!");
-      return;
-    }
-
-    toast.error("Create an event type first so you have a shareable booking link.");
-  };
-
   const actions = [
     {
       title: "Create Event Type",
@@ -38,16 +20,6 @@ export function QuickActions() {
       icon: Clock,
       href: "/dashboard/availability",
       onClick: undefined,
-    },
-    {
-      title: "Copy Booking Link",
-      description:
-        user?.username && firstEventType
-          ? `/${user.username}/${firstEventType.id}`
-          : "Create an event type to get a booking link",
-      icon: Copy,
-      href: undefined,
-      onClick: handleCopyLink,
     },
     {
       title: "Settings",

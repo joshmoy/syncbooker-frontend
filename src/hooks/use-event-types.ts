@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { eventTypesService } from "@/lib/event-types";
 import type {
   GenerateBookingCopyRequest,
+  GenerateBookingFaqRequest,
   CreateEventTypeRequest,
   UpdateEventTypeRequest,
 } from "@/types/event-type";
@@ -135,6 +136,19 @@ export function useGenerateBookingCopy() {
       eventTypesService.generateBookingCopy(data),
     onError: (error: AxiosError<ApiErrorResponse>) => {
       toast.error(getErrorMessage(error) || "Failed to generate booking copy. Please try again.");
+    },
+  });
+}
+
+/**
+ * Hook to generate booking page FAQ suggestions
+ */
+export function useGenerateBookingFaqs() {
+  return useMutation({
+    mutationFn: (data: GenerateBookingFaqRequest) =>
+      eventTypesService.generateBookingFaqs(data),
+    onError: (error: AxiosError<ApiErrorResponse>) => {
+      toast.error(getErrorMessage(error) || "Failed to generate booking FAQs. Please try again.");
     },
   });
 }
