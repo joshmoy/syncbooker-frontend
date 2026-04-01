@@ -10,6 +10,8 @@ import {
   GenerateBookingCopyResponse,
   GenerateBookingFaqRequest,
   GenerateBookingFaqResponse,
+  GenerateEventTypeIdeasRequest,
+  GenerateEventTypeIdeasResponse,
 } from "@/types/event-type";
 
 /**
@@ -104,6 +106,19 @@ export const eventTypesService = {
   ): Promise<GenerateBookingFaqResponse> {
     const response = await apiInstance.post<GenerateBookingFaqResponse>(
       "/event-types/generate-faqs",
+      data
+    );
+    return response.data;
+  },
+
+  /**
+   * Generate event type ideas from a plain-English prompt
+   */
+  async generateEventTypeIdeas(
+    data: GenerateEventTypeIdeasRequest
+  ): Promise<GenerateEventTypeIdeasResponse> {
+    const response = await apiInstance.post<GenerateEventTypeIdeasResponse>(
+      "/event-types/generate-ideas",
       data
     );
     return response.data;

@@ -21,6 +21,7 @@ import { useAuthStore } from "@/store/auth";
 import { toast } from "sonner";
 import { BookingCopyAssistant } from "@/components/dashboard/booking-copy-assistant";
 import { BookingFaqAssistant } from "@/components/dashboard/booking-faq-assistant";
+import { EventTypeGeneratorAssistant } from "@/components/dashboard/event-type-generator-assistant";
 import type { EventType, EventTypeFaq } from "@/types/event-type";
 
 const durations = [15, 30, 45, 60, 90, 120];
@@ -152,6 +153,15 @@ function EventTypeDetailsForm({
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
+                  <EventTypeGeneratorAssistant
+                    onApplySuggestion={(suggestion) => {
+                      setTitle(suggestion.title);
+                      setDuration(suggestion.durationMinutes.toString());
+                      setDescription(suggestion.description);
+                      setColor(suggestion.color);
+                    }}
+                  />
+
                   <div className="space-y-2">
                     <Label htmlFor="title">Event Title</Label>
                     <Input

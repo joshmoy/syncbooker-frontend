@@ -20,6 +20,7 @@ import Link from "next/link";
 import { useCreateEventType } from "@/hooks/use-event-types";
 import { useAuthStore } from "@/store/auth";
 import { BookingCopyAssistant } from "@/components/dashboard/booking-copy-assistant";
+import { EventTypeGeneratorAssistant } from "@/components/dashboard/event-type-generator-assistant";
 
 const durations = [15, 30, 45, 60, 90, 120];
 
@@ -88,6 +89,15 @@ export default function NewEventPage() {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
+                  <EventTypeGeneratorAssistant
+                    onApplySuggestion={(suggestion) => {
+                      setTitle(suggestion.title);
+                      setDuration(suggestion.durationMinutes.toString());
+                      setDescription(suggestion.description);
+                      setColor(suggestion.color);
+                    }}
+                  />
+
                   <div className="space-y-2">
                     <Label htmlFor="title">Event Title</Label>
                     <Input

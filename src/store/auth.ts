@@ -2,6 +2,8 @@ import { create } from "zustand";
 import { User } from "@/types/auth";
 import { authService } from "@/lib/auth";
 
+const DASHBOARD_INTELLIGENCE_STORAGE_KEY = "dashboard-intelligence-widget";
+
 interface AuthState {
   user: User | null;
   token: string | null;
@@ -33,6 +35,9 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: () => {
     authService.logout();
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(DASHBOARD_INTELLIGENCE_STORAGE_KEY);
+    }
     set({
       user: null,
       token: null,

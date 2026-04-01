@@ -6,6 +6,7 @@ import { eventTypesService } from "@/lib/event-types";
 import type {
   GenerateBookingCopyRequest,
   GenerateBookingFaqRequest,
+  GenerateEventTypeIdeasRequest,
   CreateEventTypeRequest,
   UpdateEventTypeRequest,
 } from "@/types/event-type";
@@ -68,7 +69,7 @@ export function usePublicEventType(id: string) {
 /**
  * Hook to create a new event type
  */
-export function useCreateEventType(redirectTo = "/dashboard/events") {
+export function useCreateEventType(redirectTo: string | null = "/dashboard/events") {
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -79,7 +80,9 @@ export function useCreateEventType(redirectTo = "/dashboard/events") {
       // Invalidate and refetch event types list
       queryClient.invalidateQueries({ queryKey: eventTypeKeys.list() });
       toast.success(response.message || "Event type created successfully!");
-      router.push(redirectTo);
+      if (redirectTo) {
+        router.push(redirectTo);
+      }
     },
     onError: (error: AxiosError<ApiErrorResponse>) => {
       toast.error(getErrorMessage(error) || "Failed to create event type. Please try again.");
@@ -149,6 +152,19 @@ export function useGenerateBookingFaqs() {
       eventTypesService.generateBookingFaqs(data),
     onError: (error: AxiosError<ApiErrorResponse>) => {
       toast.error(getErrorMessage(error) || "Failed to generate booking FAQs. Please try again.");
+    },
+  });
+}
+
+/**
+ * Hook to generate event type ideas from a prompt
+ */
+export function useGenerateEventTypeIdeas() {
+  return useMutation({
+    mutationFn: (data: GenerateEventTypeIdeasRequest) =>
+      eventTypesService.generateEventTypeIdeas(data),
+    onError: (error: AxiosError<ApiErrorResponse>) => {
+      toast.error(getErrorMessage(error) || "Failed to generate event ideas. Please try again.");
     },
   });
 }

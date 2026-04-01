@@ -29,6 +29,7 @@ import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth";
 import { useLogout } from "@/hooks/use-auth";
 import { useEffect, useSyncExternalStore } from "react";
+import { DashboardIntelligenceWidget } from "@/components/dashboard/dashboard-intelligence-widget";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, exact: true },
@@ -80,6 +81,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     () => true,
     () => false
   );
+  const shouldShowIntelligenceWidget =
+    !pathname.startsWith("/dashboard/settings") &&
+    !(pathname.startsWith("/dashboard/events/") && pathname !== "/dashboard/events/new");
 
   useEffect(() => {
     initialize();
@@ -195,6 +199,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           </div>
         )}
         <div className="mx-auto max-w-7xl p-4 md:p-8">{children}</div>
+        {shouldShowIntelligenceWidget && <DashboardIntelligenceWidget />}
       </main>
     </div>
   );

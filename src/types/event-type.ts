@@ -21,6 +21,13 @@ export interface EventTypeFaq {
   answer: string;
 }
 
+export interface EventTypeDraft {
+  title: string;
+  durationMinutes: number;
+  description: string;
+  color: string;
+}
+
 export interface CreateEventTypeRequest {
   title: string;
   durationMinutes: number;
@@ -59,6 +66,11 @@ export interface GenerateBookingFaqRequest {
   audience?: string;
 }
 
+export interface GenerateEventTypeIdeasRequest {
+  prompt: string;
+  audience?: string;
+}
+
 export interface UpdateEventTypeRequest {
   title?: string;
   description?: string;
@@ -88,4 +100,10 @@ export interface GenerateBookingFaqResponse {
   message: string;
   provider: "gemini" | "template";
   faqs: EventTypeFaq[];
+}
+
+export interface GenerateEventTypeIdeasResponse {
+  message: string;
+  provider: "gemini" | "template";
+  suggestions: EventTypeDraft[];
 }
