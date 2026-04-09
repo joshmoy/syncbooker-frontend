@@ -23,9 +23,6 @@ export const metadata: Metadata = {
       { rel: "icon", sizes: "192x192", url: "/favicon/android-chrome-192x192.png" },
     ],
   },
-  verification: {
-    google: "5pEQxT2v879sFOQaBhyl0T1m7coOb35FJE4oqbWRbFE",
-  },
 };
 
 export default function RootLayout({
