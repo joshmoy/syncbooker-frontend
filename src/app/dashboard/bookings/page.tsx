@@ -29,7 +29,12 @@ import { useBookings, useApproveBooking, useRejectBooking, useDeleteBooking } fr
 import type { Booking } from "@/types/booking";
 import { RescheduleDialog } from "@/components/dashboard/reschedule-dialog";
 import Link from "next/link";
-import { format, isPast } from "date-fns";
+import { isPast } from "date-fns";
+import {
+  formatShortDateInTimeZone,
+  formatTimeRangeInTimeZone,
+  getTimeZoneName,
+} from "@/lib/timezone";
 
 export default function BookingsPage() {
   const { data: bookings, isLoading, error } = useBookings();
@@ -393,11 +398,12 @@ function BookingCard({
             <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-2 body-sm text-muted-foreground">
                 <Calendar className="h-4 w-4" />
-                {format(startDate, "MMM dd, yyyy")}
+                {formatShortDateInTimeZone(startDate, booking.timezone)}
               </div>
               <div className="flex items-center gap-2 body-sm text-muted-foreground">
                 <Clock className="h-4 w-4" />
-                {format(startDate, "h:mm a")} - {format(endDate, "h:mm a")}
+                {formatTimeRangeInTimeZone(startDate, endDate, booking.timezone)}
+                <span>{getTimeZoneName(startDate, booking.timezone)}</span>
               </div>
               <div className="flex items-center gap-2 body-sm text-muted-foreground">
                 <Mail className="h-4 w-4" />

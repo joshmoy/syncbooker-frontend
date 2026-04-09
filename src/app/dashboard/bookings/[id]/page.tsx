@@ -23,8 +23,14 @@ import {
 import { useBooking, useApproveBooking, useRejectBooking, useGenerateMeetingLink } from "@/hooks/use-bookings";
 import { RescheduleDialog } from "@/components/dashboard/reschedule-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { format, isPast } from "date-fns";
+import { isPast } from "date-fns";
 import { useState } from "react";
+import {
+  formatDateInTimeZone,
+  formatInTimeZone,
+  formatTimeRangeInTimeZone,
+  getTimeZoneName,
+} from "@/lib/timezone";
 
 export default function BookingDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -185,7 +191,7 @@ export default function BookingDetailsPage({ params }: { params: Promise<{ id: s
                     <div>
                       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</p>
                       <p className="body-md font-semibold">
-                        {format(new Date(booking.startTime), "EEEE, MMMM do, yyyy")}
+                        {formatDateInTimeZone(booking.startTime, booking.timezone)}
                       </p>
                     </div>
                   </div>
@@ -197,7 +203,14 @@ export default function BookingDetailsPage({ params }: { params: Promise<{ id: s
                     <div>
                       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Time</p>
                       <p className="body-md font-semibold">
-                        {format(new Date(booking.startTime), "h:mm a")} - {format(new Date(booking.endTime), "h:mm a")}
+                        {formatTimeRangeInTimeZone(
+                          booking.startTime,
+                          booking.endTime,
+                          booking.timezone,
+                        )}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {getTimeZoneName(booking.startTime, booking.timezone)}
                       </p>
                     </div>
                   </div>
@@ -338,7 +351,13 @@ export default function BookingDetailsPage({ params }: { params: Promise<{ id: s
                   <div className="mt-1 h-2 w-2 rounded-full bg-primary flex-shrink-0" />
                   <div>
                     <p className="text-xs font-medium text-muted-foreground uppercase">Requested</p>
-                    <p className="text-xs">{format(new Date(booking.createdAt), "MMM d, yyyy h:mm a")}</p>
+                    <p className="text-xs">
+                      {formatInTimeZone(
+                        booking.createdAt,
+                        { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" },
+                        booking.timezone,
+                      )}
+                    </p>
                   </div>
                 </div>
                 {booking.confirmedAt && (
@@ -346,7 +365,13 @@ export default function BookingDetailsPage({ params }: { params: Promise<{ id: s
                     <div className="mt-1 h-2 w-2 rounded-full bg-success flex-shrink-0" />
                     <div>
                       <p className="text-xs font-medium text-muted-foreground uppercase">Confirmed</p>
-                      <p className="text-xs">{format(new Date(booking.confirmedAt), "MMM d, yyyy h:mm a")}</p>
+                      <p className="text-xs">
+                        {formatInTimeZone(
+                          booking.confirmedAt,
+                          { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" },
+                          booking.timezone,
+                        )}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -355,7 +380,13 @@ export default function BookingDetailsPage({ params }: { params: Promise<{ id: s
                     <div className="mt-1 h-2 w-2 rounded-full bg-primary flex-shrink-0" />
                     <div>
                       <p className="text-xs font-medium text-muted-foreground uppercase">Rescheduled</p>
-                      <p className="text-xs">{format(new Date(booking.rescheduledAt), "MMM d, yyyy h:mm a")}</p>
+                      <p className="text-xs">
+                        {formatInTimeZone(
+                          booking.rescheduledAt,
+                          { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" },
+                          booking.timezone,
+                        )}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -364,7 +395,13 @@ export default function BookingDetailsPage({ params }: { params: Promise<{ id: s
                     <div className="mt-1 h-2 w-2 rounded-full bg-destructive flex-shrink-0" />
                     <div>
                       <p className="text-xs font-medium text-muted-foreground uppercase">Cancelled</p>
-                      <p className="text-xs">{format(new Date(booking.updatedAt), "MMM d, yyyy h:mm a")}</p>
+                      <p className="text-xs">
+                        {formatInTimeZone(
+                          booking.updatedAt,
+                          { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" },
+                          booking.timezone,
+                        )}
+                      </p>
                     </div>
                   </div>
                 )}

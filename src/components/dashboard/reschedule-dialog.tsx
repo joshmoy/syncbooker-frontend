@@ -13,8 +13,13 @@ import {
 import { Loader2 } from "lucide-react";
 import { useAvailableSlots } from "@/hooks/use-bookings";
 import { useRescheduleBooking } from "@/hooks/use-bookings";
-import { format, isSameDay } from "date-fns";
 import type { Booking } from "@/types/booking";
+import {
+  formatCalendarDateKey,
+  formatDateKeyInTimeZone,
+  formatTimeInTimeZone,
+  getTimeZoneName,
+} from "@/lib/timezone";
 
 interface RescheduleDialogProps {
   booking: Booking;
@@ -38,14 +43,20 @@ export function RescheduleDialog({
   const availableDates = useMemo(() => {
     if (!allSlots) return new Set<string>();
     return new Set(
-      allSlots.map((s) => format(new Date(s.startTime), "yyyy-MM-dd"))
+      allSlots.map((slot) =>
+        formatDateKeyInTimeZone(slot.startTime, slot.timezone ?? booking.timezone)
+      )
     );
-  }, [allSlots]);
+  }, [allSlots, booking.timezone]);
 
   const slotsForDate = useMemo(() => {
     if (!date || !allSlots) return [];
-    return allSlots.filter((s) => isSameDay(new Date(s.startTime), date));
-  }, [date, allSlots]);
+    const selectedDateKey = formatCalendarDateKey(date);
+    return allSlots.filter(
+      (slot) =>
+        formatDateKeyInTimeZone(slot.startTime, slot.timezone ?? booking.timezone) === selectedDateKey
+    );
+  }, [date, allSlots, booking.timezone]);
 
   const handleConfirm = () => {
     if (!selectedSlot) return;
@@ -83,7 +94,7 @@ export function RescheduleDialog({
             }}
             disabled={(d) => {
               if (d < new Date(new Date().setHours(0, 0, 0, 0))) return true;
-              return !availableDates.has(format(d, "yyyy-MM-dd"));
+              return !availableDates.has(formatCalendarDateKey(d));
             }}
             className="rounded-md border border-border mx-auto"
           />
@@ -96,7 +107,8 @@ export function RescheduleDialog({
                   <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                 </div>
               ) : slotsForDate.length > 0 ? (
-                <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-1">
+                <div className="space-y-3">
+                  <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-1">
                   {slotsForDate.map((slot) => (
                     <Button
                       key={slot.startTime}
@@ -104,9 +116,19 @@ export function RescheduleDialog({
                       size="sm"
                       onClick={() => setSelectedSlot(slot.startTime)}
                     >
-                      {format(new Date(slot.startTime), "h:mm a")}
+                      {formatTimeInTimeZone(
+                        slot.startTime,
+                        slot.timezone ?? booking.timezone,
+                      )}
                     </Button>
                   ))}
+                </div>
+                  <p className="text-xs text-muted-foreground">
+                    {getTimeZoneName(
+                      slotsForDate[0].startTime,
+                      slotsForDate[0].timezone ?? booking.timezone,
+                    )}
+                  </p>
                 </div>
               ) : (
                 <p className="body-sm text-muted-foreground text-center py-4">
