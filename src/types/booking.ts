@@ -7,6 +7,7 @@ export interface Booking {
   inviteeEmail: string;
   startTime: string; // ISO 8601
   endTime: string; // ISO 8601
+  timezone: string;
   status: BookingStatus;
   notes: string | null;
   meetingLink: string | null;
@@ -19,12 +20,14 @@ export interface Booking {
     id: string;
     title: string;
     durationMinutes: number;
+    timezone?: string;
   };
 }
 
 export interface AvailableSlot {
   startTime: string; // ISO 8601
   endTime: string; // ISO 8601
+  timezone?: string;
 }
 
 export interface CreateBookingRequest {

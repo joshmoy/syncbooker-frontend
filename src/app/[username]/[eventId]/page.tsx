@@ -21,7 +21,13 @@ import {
 import { usePublicEventType } from "@/hooks/use-event-types";
 import { useTrackVisitor } from "@/hooks/use-visitor";
 import { useAvailableSlots, useCreatePublicBooking } from "@/hooks/use-bookings";
-import { format, isSameDay } from "date-fns";
+import {
+  formatCalendarDateKey,
+  formatDateInTimeZone,
+  formatDateKeyInTimeZone,
+  formatTimeInTimeZone,
+  getTimeZoneName,
+} from "@/lib/timezone";
 
 export default function BookingPage({
   params,
@@ -37,6 +43,7 @@ export default function BookingPage({
   const [notes, setNotes] = useState("");
 
   const { data: eventType, isLoading: eventLoading } = usePublicEventType(eventId);
+  const eventTimeZone = eventType?.timezone;
 
   // Track visitor
   const visitorUsername = eventType?.user?.username;
@@ -54,8 +61,12 @@ export default function BookingPage({
   // Filter the backend's pre-computed slots to those matching the selected date
   const slots = useMemo(() => {
     if (!date || !backendSlots) return [];
-    return backendSlots.filter((slot) => isSameDay(new Date(slot.startTime), date));
-  }, [date, backendSlots]);
+    const selectedDateKey = formatCalendarDateKey(date);
+    return backendSlots.filter(
+      (slot) =>
+        formatDateKeyInTimeZone(slot.startTime, slot.timezone ?? eventTimeZone) === selectedDateKey
+    );
+  }, [date, backendSlots, eventTimeZone]);
 
   const handleConfirm = () => {
     if (!selectedTime || !eventType) return;
@@ -78,7 +89,7 @@ export default function BookingPage({
 
   // Format slot time for display
   const formatSlotTime = (isoString: string) => {
-    return format(new Date(isoString), "h:mm a");
+    return formatTimeInTimeZone(isoString, eventTimeZone);
   };
 
   if (eventLoading) {
@@ -189,16 +200,21 @@ export default function BookingPage({
               <p className="body-md text-muted-foreground mb-6">
                 Your meeting has been scheduled. A confirmation email has been sent to {email}.
               </p>
-              <div className="space-y-2 rounded-lg bg-muted/50 p-4">
-                <div className="flex items-center justify-center gap-2 body-md">
-                  <CalendarIcon className="h-4 w-4" />
-                  {date && format(date, "EEEE, MMMM d, yyyy")}
+                <div className="space-y-2 rounded-lg bg-muted/50 p-4">
+                  <div className="flex items-center justify-center gap-2 body-md">
+                    <CalendarIcon className="h-4 w-4" />
+                    {selectedTime && formatDateInTimeZone(selectedTime, eventTimeZone)}
+                  </div>
+                  <div className="flex items-center justify-center gap-2 body-md">
+                    <Clock className="h-4 w-4" />
+                    {selectedTime && formatSlotTime(selectedTime)}
+                  </div>
+                  {selectedTime && (
+                    <div className="text-center text-sm text-muted-foreground">
+                      {getTimeZoneName(selectedTime, eventTimeZone)}
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-center justify-center gap-2 body-md">
-                  <Clock className="h-4 w-4" />
-                  {selectedTime && formatSlotTime(selectedTime)}
-                </div>
-              </div>
               <Link href="/" className="mt-6 inline-block">
                 <Button variant="outline">Back to Home</Button>
               </Link>
@@ -249,7 +265,10 @@ export default function BookingPage({
                     </div>
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Clock className="h-5 w-5" />
-                      <span className="body-md">{eventType.durationMinutes} minutes</span>
+                      <span className="body-md">
+                        {eventType.durationMinutes} minutes
+                        {eventTimeZone ? ` · ${eventTimeZone}` : ""}
+                      </span>
                     </div>
                     {eventType.description && (
                       <p className="body-md text-muted-foreground">{eventType.description}</p>
@@ -366,12 +385,17 @@ export default function BookingPage({
                       <div className="rounded-lg border border-border bg-muted/50 p-4">
                         <div className="flex items-center gap-2 body-md mb-1">
                           <CalendarIcon className="h-4 w-4" />
-                          {date && format(date, "EEEE, MMMM d, yyyy")}
+                          {selectedTime && formatDateInTimeZone(selectedTime, eventTimeZone)}
                         </div>
                         <div className="flex items-center gap-2 body-md">
                           <Clock className="h-4 w-4" />
                           {selectedTime && formatSlotTime(selectedTime)}
                         </div>
+                        {selectedTime && (
+                          <div className="mt-2 text-sm text-muted-foreground">
+                            {getTimeZoneName(selectedTime, eventTimeZone)}
+                          </div>
+                        )}
                       </div>
 
                       <div className="space-y-4">

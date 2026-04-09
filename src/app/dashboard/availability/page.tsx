@@ -22,6 +22,7 @@ import {
   useReplaceAvailabilities,
 } from "@/hooks/use-availability";
 import type { DayAvailability } from "@/types/availability";
+import { getBrowserTimeZone } from "@/lib/timezone";
 
 const daysOfWeek = [
   { name: "Sunday", value: 0 },
@@ -107,6 +108,11 @@ export default function AvailabilityPage() {
   const { data: availabilities, isLoading } = useAvailabilities();
   const replaceAvailabilities = useReplaceAvailabilities();
   const isOnboardingFlow = searchParams.get("onboarding") === "1";
+  const detectedTimeZone = useMemo(() => getBrowserTimeZone(), []);
+  const availabilityTimeZone = useMemo(
+    () => availabilities?.find((availability) => availability.timezone)?.timezone || detectedTimeZone,
+    [availabilities, detectedTimeZone]
+  );
 
   // Local edits — null means the user hasn't changed anything yet
   const [edits, setEdits] = useState<DayAvailability[] | null>(null);
@@ -237,7 +243,7 @@ export default function AvailabilityPage() {
           dayOfWeek: day.dayOfWeek,
           startTime: formatTimeForAPI(slot.start),
           endTime: formatTimeForAPI(slot.end),
-          timezone: "UTC",
+          timezone: availabilityTimeZone,
         }))
       );
 
@@ -288,7 +294,7 @@ export default function AvailabilityPage() {
         <div>
           <h1 className="heading-lg">Availability</h1>
           <p className="body-md mt-2 text-muted-foreground">
-            Set your weekly availability for bookings
+            Set your weekly availability for bookings in {availabilityTimeZone}
           </p>
         </div>
 

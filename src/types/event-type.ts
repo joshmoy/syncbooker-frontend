@@ -6,6 +6,7 @@ export interface EventType {
   durationMinutes: number;
   color: string | null;
   faqs?: EventTypeFaq[] | null;
+  timezone?: string;
   createdAt: string;
   updatedAt: string;
   user?: {
