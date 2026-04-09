@@ -1,37 +1,13 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { PublicSiteHeader } from "@/components/public-site-header";
 import { Calendar, Clock, Users, Zap } from "lucide-react";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Image
-                src="/logo.svg"
-                alt="SyncBooker"
-                width={28}
-                height={28}
-                className="w-full max-w-[180px] h-auto"
-              />
-            </div>
-            <nav className="flex items-center gap-4">
-              <Link href="/login">
-                <Button variant="ghost" size="sm">
-                  Log in
-                </Button>
-              </Link>
-              <Link href="/signup">
-                <Button size="sm">Get Started</Button>
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <PublicSiteHeader />
 
       {/* Hero Section */}
       <section className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">

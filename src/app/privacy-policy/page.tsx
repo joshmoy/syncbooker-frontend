@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
+import { PublicSiteHeader } from "@/components/public-site-header";
 
 export const metadata: Metadata = { title: "Privacy Policy" };
 
@@ -11,32 +11,7 @@ const appHost = new URL(appUrl).hostname;
 export default function PrivacyPolicyPage() {
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <Link href="/">
-              <Image
-                src="/logo.svg"
-                alt="SyncBooker"
-                width={28}
-                height={28}
-                className="w-full max-w-[180px] h-auto"
-              />
-            </Link>
-            <nav className="flex items-center gap-4">
-              <Link href="/login">
-                <Button variant="ghost" size="sm">
-                  Log in
-                </Button>
-              </Link>
-              <Link href="/signup">
-                <Button size="sm">Get Started</Button>
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <PublicSiteHeader />
 
       {/* Content */}
       <main className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
